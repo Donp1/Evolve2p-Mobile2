@@ -6,12 +6,15 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import CreateContainer from "./CreateContainer";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
 import SelectDropdown, { DataProp } from "../SelectDropdown";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { checkUsernamExist } from "@/utils/countryStore";
+import Spinner from "../Spinner";
+import { useAlert } from "../AlertService";
 type pageProps = {
   setStepCount: React.Dispatch<React.SetStateAction<number>>;
   setSelectedCountry: React.Dispatch<React.SetStateAction<DataProp | null>>;
@@ -19,7 +22,10 @@ type pageProps = {
   phoneNumber: string;
   setPhoneNumber: React.Dispatch<React.SetStateAction<string>>;
   setUsername: React.Dispatch<React.SetStateAction<string>>;
+  setRegIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  regIsLoading: boolean;
   username: string;
+  handlFinalRegistration: () => void;
 };
 const StepFour = ({
   setStepCount,
@@ -29,10 +35,17 @@ const StepFour = ({
   setPhoneNumber,
   username,
   setUsername,
+  handlFinalRegistration,
+  regIsLoading,
+  setRegIsLoading,
 }: pageProps) => {
   const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userExist, setUserExist] = useState(false);
 
-  const handlePhoneNumber = useCallback((e: string) => {
+  const { AlertComponent, showAlert } = useAlert();
+
+  const handlePhoneNumber = (e: string) => {
     let isNumberValid = false;
     if (selectedCountry?.name !== "") {
       isNumberValid = isValidPhoneNumber(e, {
@@ -45,13 +58,41 @@ const StepFour = ({
 
     if (isNumberValid) {
     }
-  }, []);
+  };
+
+  const handleUsername = async () => {
+    setIsLoading(true);
+    try {
+      const res = await checkUsernamExist(username);
+      if (res?.success) {
+        showAlert(
+          "Error",
+          res?.message,
+          [{ text: "Close", onPress: () => {} }],
+          "error"
+        );
+        setUserExist(true);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      showAlert(
+        "Error",
+        String(error),
+        [{ text: "Close", onPress: () => {} }],
+        "error"
+      );
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <CreateContainer
       heading="Complete Your Profile"
       text="This helps personalize your experience."
     >
+      {AlertComponent}
       <View style={[styles.form, { marginTop: 20, flex: 1 }]}>
         <View style={{ gap: 10 }}>
           <Text style={styles.formLabel}>Username</Text>
@@ -71,21 +112,30 @@ const StepFour = ({
                 placeholder="Enter your username"
                 placeholderTextColor={colors.secondary}
                 onChangeText={(e) => setUsername(e)}
+                onBlur={handleUsername}
+                onSubmitEditing={handleUsername}
                 defaultValue={username}
+                editable={isLoading ? false : true}
               />
             </View>
-            <View style={styles.formContainerBottom}>
-              <Text
-                style={{
-                  fontSize: ms(12),
-                  fontWeight: 400,
-                  color: "green",
-                  lineHeight: 20,
-                }}
-              >
-                Username available
-              </Text>
-            </View>
+            {username != "" && (
+              <View style={styles.formContainerBottom}>
+                {isLoading && !userExist ? (
+                  <Spinner width={20} height={20} />
+                ) : (
+                  <Text
+                    style={{
+                      fontSize: ms(12),
+                      fontWeight: 400,
+                      color: userExist ? "red" : "green",
+                      lineHeight: 20,
+                    }}
+                  >
+                    {userExist ? "Username taken" : "Username available"}
+                  </Text>
+                )}
+              </View>
+            )}
           </View>
         </View>
 
@@ -132,16 +182,30 @@ const StepFour = ({
 
         <View style={styles.bottomContainer}>
           <Pressable
-            onPress={() => alert("hello")}
-            disabled={!username || !selectedCountry?.name || !phoneNumber}
+            onPress={handlFinalRegistration}
+            disabled={
+              !username ||
+              !selectedCountry?.name ||
+              !phoneNumber ||
+              !isPhoneValid ||
+              regIsLoading
+            }
             style={[
               styles.btn,
-              !username || !selectedCountry?.name || !phoneNumber
+              !username ||
+              !selectedCountry?.name ||
+              !phoneNumber ||
+              !isPhoneValid ||
+              regIsLoading
                 ? { opacity: 0.5 }
                 : null,
             ]}
           >
-            <Text style={styles.btnText}>Continue</Text>
+            {regIsLoading ? (
+              <Spinner width={20} height={20} />
+            ) : (
+              <Text style={styles.btnText}>Continue</Text>
+            )}
           </Pressable>
         </View>
       </View>

@@ -1,48 +1,94 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import CreateContainer from "./CreateContainer";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
 import { OtpInput } from "react-native-otp-entry";
-import Animated, {
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  useAnimatedStyle,
-  Easing,
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
 } from "react-native-reanimated";
+import { sendOtp, verifyOtp } from "@/utils/countryStore";
+import Spinner from "../Spinner";
+import CustomeOtp from "../CustomeOtp";
+import { useAlert } from "../AlertService";
+
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false, // Reanimated runs in strict mode by default
+});
 
 type pageProp = {
   setStepCount: Dispatch<SetStateAction<number>>;
   email: string;
+  isReset: boolean;
 };
-const StepThree = ({ setStepCount, email }: pageProp) => {
-  const [otp, setOtp] = useState("");
+const StepThree = ({ setStepCount, email, isReset }: pageProp) => {
   const [countDown, setCountDown] = useState(30);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
-  const handleOtp = (e: string) => {
-    setOtp(e);
-    if (e.length === 6) {
-      setStepCount(4);
+  const { AlertComponent, showAlert } = useAlert();
+
+  const handleOtp = async (otp: string) => {
+    setIsLoading(true);
+    try {
+      if (otp.length >= 6) {
+        const res = await verifyOtp(email, otp);
+        if (res?.success) {
+          setIsLoading(false);
+          showAlert(
+            "Success",
+            res?.message,
+            [{ text: "Next", onPress: () => setStepCount((c) => c + 1) }],
+            "success"
+          );
+        }
+        if (res?.error) {
+          setIsLoading(false);
+          showAlert(
+            "Error",
+            res?.message,
+            [{ text: "Close", onPress: () => {} }],
+            "error"
+          );
+        }
+      }
+    } catch (error) {
+      setIsLoading(false);
+      showAlert(
+        "Error",
+        String(error),
+        [{ text: "Close", onPress: () => {} }],
+        "error"
+      );
     }
   };
 
-  const rotation = useSharedValue(0);
-  const animatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotateZ: `${rotation.value}deg` }],
-    };
-  }, [rotation.value]);
+  const handleResend = async () => {
+    setIsResending(true);
+    try {
+      const res = await sendOtp(email);
 
-  useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 1000, easing: Easing.linear }),
-      -1
-    );
-    return () => {
-      rotation.value = 0;
-    };
-  }, []);
+      if (res?.success) {
+        showAlert(
+          "Success",
+          res?.message,
+          [{ text: "Close", onPress: () => setCountDown(30) }],
+          "success"
+        );
+        setIsResending(false);
+      }
+    } catch (error) {
+      setIsResending(false);
+      showAlert(
+        "Error",
+        String(error),
+        [{ text: "Close", onPress: () => {} }],
+        "error"
+      );
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -56,6 +102,7 @@ const StepThree = ({ setStepCount, email }: pageProp) => {
       heading="Verify Email"
       text="Please enter the 6-digit code sent to"
     >
+      {AlertComponent}
       <Text
         style={{
           fontWeight: 400,
@@ -68,22 +115,7 @@ const StepThree = ({ setStepCount, email }: pageProp) => {
       </Text>
 
       <View style={{ marginVertical: ms(20) }}>
-        <OtpInput
-          blurOnFilled={true}
-          numberOfDigits={6}
-          type="numeric"
-          secureTextEntry
-          focusColor="green"
-          autoFocus={true}
-          hideStick={false}
-          focusStickBlinkingDuration={500}
-          onFilled={handleOtp}
-          theme={{
-            containerStyle: styles.otpContainer,
-            pinCodeContainerStyle: styles.pinCodeContainer,
-            pinCodeTextStyle: styles.pinCodeText,
-          }}
-        />
+        <CustomeOtp numberofDigits={6} handleOtp={handleOtp} />
       </View>
 
       <View
@@ -91,7 +123,7 @@ const StepThree = ({ setStepCount, email }: pageProp) => {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          gap: 12,
+          gap: 8,
         }}
       >
         <Text
@@ -105,26 +137,39 @@ const StepThree = ({ setStepCount, email }: pageProp) => {
         >
           Didn&apos;t receive code?
         </Text>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: colors.gray2,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 10,
-            borderRadius: 100,
-          }}
-        >
-          <Text
+
+        {countDown <= 0 ? (
+          <Pressable
+            disabled={isResending}
+            onPress={handleResend}
+            style={[styles.btn, isResending && { opacity: 0.3 }]}
+          >
+            <Text style={styles.btnText}>
+              {isResending ? <Spinner width={20} height={20} /> : "Resend"}
+            </Text>
+          </Pressable>
+        ) : (
+          <View
             style={{
-              fontWeight: 700,
-              color: colors.secondary,
-              fontSize: ms(12),
+              flex: 1,
+              backgroundColor: colors.gray2,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 10,
+              borderRadius: 100,
             }}
           >
-            Resend code in {countDown}s
-          </Text>
-        </View>
+            <Text
+              style={{
+                fontWeight: 700,
+                color: colors.secondary,
+                fontSize: ms(12),
+              }}
+            >
+              Resend code in {countDown}s
+            </Text>
+          </View>
+        )}
       </View>
       <View
         style={{
@@ -133,7 +178,7 @@ const StepThree = ({ setStepCount, email }: pageProp) => {
           justifyContent: "center",
         }}
       >
-        <Animated.View style={[styles.spinner, animatedStyles]} />
+        {isLoading && <Spinner width={40} height={40} />}
       </View>
     </CreateContainer>
   );
@@ -142,27 +187,19 @@ const StepThree = ({ setStepCount, email }: pageProp) => {
 export default StepThree;
 
 const styles = StyleSheet.create({
-  otpContainer: {
-    width: "100%",
+  btn: {
+    backgroundColor: "#4DF2BE",
+    flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 100,
+    paddingVertical: 12,
   },
-  pinCodeContainer: {
-    borderWidth: 1,
-    borderColor: colors.gray,
-    backgroundColor: colors.gray2,
-    height: ms(50),
-    borderRadius: 5,
-  },
-  pinCodeText: {
-    color: colors.secondary,
-  },
-  spinner: {
-    height: 40,
-    width: 40,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderTopColor: colors.gray2,
-    borderRightColor: colors.gray2,
-    borderBottomColor: colors.gray2,
-    borderLeftColor: "green",
+  btnText: {
+    fontWeight: 700,
+    fontSize: 14,
+    letterSpacing: 1,
+    color: colors.primary,
   },
 });

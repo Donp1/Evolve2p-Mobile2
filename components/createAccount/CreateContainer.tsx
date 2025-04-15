@@ -1,5 +1,7 @@
 import {
   Keyboard,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
@@ -20,10 +22,7 @@ const CreateContainer = ({
   children,
 }: PropsWithChildren<pageProp>) => {
   return (
-    <TouchableWithoutFeedback
-      style={{ flex: 1 }}
-      onPress={() => Keyboard.dismiss()}
-    >
+    <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
       <View style={styles.container}>
         <View
           style={{
@@ -38,7 +37,7 @@ const CreateContainer = ({
 
         {children}
       </View>
-    </TouchableWithoutFeedback>
+    </Pressable>
   );
 };
 
@@ -57,8 +56,8 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   topText: {
-    fontWeight: 200,
-    color: colors.secondary,
+    fontWeight: 400,
+    color: colors.white,
     fontSize: ms(14),
     lineHeight: 24,
   },
