@@ -14,20 +14,21 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { DataProp, myCountriesDataProps } from "./SelectDropdown";
+import { myCountriesDataProps } from "./SelectDropdown";
 import { FlashList } from "@shopify/flash-list";
 import { colors } from "@/constants";
 import Item from "./Item";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { ms } from "react-native-size-matters";
+import { CountryDataProp } from "@/context";
 
 interface pageProps {
   data: myCountriesDataProps;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  setSelectedItem: Dispatch<SetStateAction<DataProp | null>>;
-  selectedItem: DataProp | null;
+  setSelectedItem: Dispatch<SetStateAction<CountryDataProp | null>>;
+  selectedItem: CountryDataProp | null;
 }
 const CustomeDropdown = ({
   data,
@@ -48,7 +49,7 @@ const CustomeDropdown = ({
     setSearchQuery("");
   };
 
-  const handleItemSelect = useCallback((item: DataProp) => {
+  const handleItemSelect = useCallback((item: CountryDataProp) => {
     setSelectedItem(item);
     setIsOpen(false);
     clearSearchInput();

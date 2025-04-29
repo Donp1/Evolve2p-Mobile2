@@ -3,8 +3,10 @@ import React, { useEffect } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import { useFonts } from "expo-font";
 import { useRouter } from "expo-router";
+import { useLoadingStore } from "@/context";
 
 const Index = () => {
+
   const [loaded, error] = useFonts({
     urbanist: require("@/assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -16,6 +18,8 @@ const Index = () => {
     }, 3000);
 
     return () => clearTimeout(tiemout);
+
+
   }, []);
   return (
     <View style={styles.container}>

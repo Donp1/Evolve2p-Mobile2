@@ -81,9 +81,13 @@ export const login = async (user: { email: string; password: string }) => {
 
 export const updateUser = async (user: any) => {
   const token = await getItemAsync("authToken");
+  let data;
+  if (token) {
+    data = JSON.parse(token);
+  }
   const res = await fetch(base_url + "/api/update-user", {
     headers: {
-      Authorization: "Bearer " + token,
+      Authorization: "Bearer " + data?.token,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(user),
@@ -94,9 +98,13 @@ export const updateUser = async (user: any) => {
 
 export const getUser = async (email: string) => {
   const token = await getItemAsync("authToken");
+  let data;
+  if (token) {
+    data = JSON.parse(token);
+  }
   const res = await fetch(base_url + "/api/get-user", {
     headers: {
-      Authorization: "Bearer " + token,
+      Authorization: "Bearer " + data?.token,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email }),
@@ -153,3 +161,44 @@ export function getUsdValue(coinAmount: number, coinPrice: number) {
   // }
   return parseFloat((coinAmount * coinPrice).toFixed(2));
 }
+
+export const getInquiryId = async () => {
+  try {
+    const token = await getItemAsync("authToken");
+    let data;
+    if (token) {
+      data = JSON.parse(token);
+    }
+    const res = await fetch(base_url + "/api/kyc-get-link", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + data?.token,
+      },
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getVerificationStatus = async (id: string) => {
+  try {
+    const token = await getItemAsync("authToken");
+    let data;
+    if (token) {
+      data = JSON.parse(token);
+    }
+    const res = await fetch(base_url + "/api/kyc-verification", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + data?.token,
+      },
+      method: "POST",
+      body: JSON.stringify({ inquiry_id: id }),
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+  }
+};

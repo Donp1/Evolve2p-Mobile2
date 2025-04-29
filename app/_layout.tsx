@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getItemAsync } from "expo-secure-store";
 import { checkToken } from "@/utils/countryStore";
+import * as Linking from "expo-linking";
 
 SplashScreen.hide();
 
@@ -46,12 +47,7 @@ export default function RootLayoutNav() {
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar backgroundColor={colors.gray2} animated style="light" />
-      <Stack
-        screenOptions={{
-          animation: "ios_from_left",
-          animationDuration: 100,
-        }}
-      >
+      <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />

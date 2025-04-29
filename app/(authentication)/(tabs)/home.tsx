@@ -37,7 +37,6 @@ export interface homeContent {
 }
 
 const Home = () => {
-  const [verified, setVerified] = React.useState(false);
   const [coinLoading, setCoinLoading] = React.useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [lockCurrency, setLockCurrency] = useState(false);
@@ -165,6 +164,7 @@ const Home = () => {
             @{user?.username}
           </Text>
         </View>
+
         <View style={styles.notiContainer}>
           <Ionicons
             style={styles.noti}
@@ -180,7 +180,7 @@ const Home = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         <View style={{ flex: 1, paddingHorizontal: 10 }}>
-          {!verified && (
+          {!user?.kycVerified && (
             <Pressable
               onPress={() => setCompleteKycVisible((c) => !c)}
               style={styles.kycBox}

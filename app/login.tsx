@@ -33,7 +33,6 @@ const Login = () => {
 
   const handleLogin = async () => {
     setIsLoading(true);
-
     try {
       const res = await login({ email, password });
 

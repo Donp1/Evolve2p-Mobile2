@@ -1,4 +1,5 @@
 import {
+  Alert,
   Modal,
   Pressable,
   SafeAreaView,
@@ -7,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { colors } from "@/constants";
 import { Image } from "expo-image";
 import { ms } from "react-native-size-matters";
@@ -16,14 +17,43 @@ import { Link, router } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAlert } from "@/components/AlertService";
 import { globalStyles } from "@/utils/globalStyles";
+import { getInquiryId } from "@/utils/countryStore";
+import KycWebview from "@/components/KycWebview";
+import * as Camera from "expo-camera";
+import Spinner from "@/components/Spinner";
 
 const StepSix = () => {
   const [modalShow, setModalShow] = useState(false);
+  const [showWebview, setShowWebview] = useState(false);
+  const [inquiryId, setInquiryId] = useState("");
+  const [permission, requestPermission] = Camera.useCameraPermissions();
+  const [loading, setIsLoading] = useState(false);
 
   const { AlertComponent, showAlert } = useAlert();
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
+  };
+
+  const kycVerification = async () => {
+    setIsLoading(true);
+    const data = await getInquiryId();
+    setIsLoading(false);
+
+    if (data?.success) {
+      if (!permission?.granted) {
+        const { granted } = await requestPermission();
+        if (!granted) {
+          alert("Sorry, we need camera permissions to make this work!");
+          return;
+        }
+      }
+
+      if (permission?.granted) {
+        setInquiryId(data?.inquiry_id);
+        setShowWebview(true);
+      }
+    }
   };
 
   const lists = [
@@ -53,12 +83,12 @@ const StepSix = () => {
             }}
           >
             <View style={{}}>
-              <Image
+              {/* <Image
                 style={{ width: ms(100), height: ms(100) }}
                 source={require("@/assets/images/onfido2.png")}
                 contentFit="contain"
                 priority={"high"}
-              />
+              /> */}
             </View>
           </View>
 
@@ -134,25 +164,24 @@ const StepSix = () => {
               paddingHorizontal: 20,
             }}
           >
-            <View style={[styles.btn, { backgroundColor: "#4DF2BE" }]}>
-              <Text
-                style={{ fontWeight: 700, fontSize: ms(14), color: "#0F1012" }}
-              >
-                Verify with
-              </Text>
-
-              <Image
-                style={{
-                  width: ms(100),
-                  height: ms(20),
-                  resizeMode: "contain",
-                }}
-                source={require("@/assets/images/onfido2.png")}
-                contentFit="contain"
-                priority={"high"}
-                contentPosition={"center"}
-              />
-            </View>
+            <Pressable
+              onPress={kycVerification}
+              style={[styles.btn, { backgroundColor: "#4DF2BE" }]}
+            >
+              {loading ? (
+                <Spinner height={20} width={20} />
+              ) : (
+                <Text
+                  style={{
+                    fontWeight: 700,
+                    fontSize: ms(14),
+                    color: "#0F1012",
+                  }}
+                >
+                  Verify
+                </Text>
+              )}
+            </Pressable>
             <Pressable
               onPress={() => router.push("/home")}
               style={[styles.btn, { backgroundColor: colors.gray2 }]}
@@ -170,6 +199,8 @@ const StepSix = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* kyc modal */}
       <Modal animationType="slide" transparent visible={modalShow}>
         <View style={globalStyles.topBar}>
           <Pressable
@@ -303,6 +334,12 @@ const StepSix = () => {
           </View>
         </View>
       </Modal>
+
+      <KycWebview
+        inquiry_id={inquiryId}
+        show={showWebview}
+        setShow={setShowWebview}
+      />
     </SafeAreaView>
   );
 };

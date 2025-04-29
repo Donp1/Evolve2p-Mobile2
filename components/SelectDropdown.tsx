@@ -6,48 +6,20 @@ import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
 import { Image } from "expo-image";
 import CustomDropdown from "./CustomeDropdown";
+import { CountryDataProp } from "@/context";
 
 interface pageProps {
-  setSelectedCountry: React.Dispatch<React.SetStateAction<DataProp | null>>;
-  selectedCountry: DataProp | null;
-}
-export interface DataProp {
-  name: string;
-  flag: string;
-  phoneCode?: string;
-  abbrev: any;
+  setSelectedCountry: React.Dispatch<
+    React.SetStateAction<CountryDataProp | null>
+  >;
+  selectedCountry: CountryDataProp | null;
 }
 
-export type myCountriesDataProps = DataProp[];
+export type myCountriesDataProps = CountryDataProp[];
 
 const SelectDropdown = ({ selectedCountry, setSelectedCountry }: pageProps) => {
   const [countries, setCountries] = useState<myCountriesDataProps>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  //   <Pressable
-  //     style={{
-  //       width: "100%",
-  //       flexDirection: "row",
-  //       alignItems: "center",
-  //       paddingVertical: 10,
-  //       paddingHorizontal: 10,
-  //       justifyContent: "space-between",
-  //     }}
-  //     onPress={() => handleItemSelect(item)}
-  //   >
-  //     <Item
-  //       onPress={() => handleItemSelect(item)}
-  //       selected={selected}
-  //       selectedItem={item}
-  //       item={item}
-  //     />
-  //     <View
-  //       style={[
-  //         styles.radio,
-  //         selectedItem?.name == item.name && { borderColor: "green" },
-  //       ]}
-  //     />
-  //   </Pressable>
-  // );
 
   const {
     data: countriesData,
@@ -63,7 +35,7 @@ const SelectDropdown = ({ selectedCountry, setSelectedCountry }: pageProps) => {
       const myCountriesData: myCountriesDataProps = [];
 
       countriesData.map((country: any) => {
-        const countryData: DataProp = {
+        const countryData: CountryDataProp = {
           name: country?.name.common,
           flag: country?.flags.png,
           phoneCode:
