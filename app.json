@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Evove2p",
-    "slug": "Evove2p",
+    "name": "Evolve2p",
+    "slug": "Evolve2p",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/Logo.png",
@@ -14,24 +14,41 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/Logo.png"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/Logo.png",
         "backgroundColor": "#000000",
-        "softwareKeyboardLayoutMode": "pan"
+        "googleServicesFile": "./android/app/google-services.json",
+        "useNextNotificationsApi": true
       },
       "package": "com.donflexy.Evove2p"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/Logo.png"
     },
     "plugins": [
       "expo-router",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/Logo.png",
+          "color": "#ffffff",
+          "presentationOptions": {
+            "badge": true,
+            "sound": true,
+            "alert": true
+          },
+          "enableBackgroundRemoteNotification": true
+        }
+      ],
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
@@ -41,9 +58,13 @@
         "origin": false
       },
       "eas": {
-        "projectId": "ccf3c703-e503-4c0e-afa7-8ba745b67151"
+        "projectId": "4f651417-f1c6-4705-9726-52a2d2acb140"
       }
     },
-    "owner": "donflexy"
+    "owner": "donflexy",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/4f651417-f1c6-4705-9726-52a2d2acb140"
+    }
   }
 }

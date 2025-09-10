@@ -2,7 +2,6 @@ import {
   Alert,
   Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import { getInquiryId } from "@/utils/countryStore";
 import KycWebview from "@/components/KycWebview";
 import * as Camera from "expo-camera";
 import Spinner from "@/components/Spinner";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const StepSix = () => {
   const [modalShow, setModalShow] = useState(false);
@@ -35,20 +35,24 @@ const StepSix = () => {
     if (router.canGoBack()) router.back();
   };
 
+  useEffect(() => {
+    if (!permission?.granted) {
+      (async () => {
+        const { granted } = await requestPermission();
+        if (!granted) {
+          alert("Sorry, we need camera permissions to make this work!");
+          await requestPermission();
+        }
+      })();
+    }
+  }, [permission?.granted]);
+
   const kycVerification = async () => {
     setIsLoading(true);
     const data = await getInquiryId();
     setIsLoading(false);
 
     if (data?.success) {
-      if (!permission?.granted) {
-        const { granted } = await requestPermission();
-        if (!granted) {
-          alert("Sorry, we need camera permissions to make this work!");
-          return;
-        }
-      }
-
       if (permission?.granted) {
         setInquiryId(data?.inquiry_id);
         setShowWebview(true);
@@ -72,7 +76,9 @@ const StepSix = () => {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={{ flex: 1, backgroundColor: colors.primary }}
+      >
         <View style={{ flex: 1, paddingBottom: 20 }}>
           {AlertComponent}
           <View
@@ -298,7 +304,7 @@ const StepSix = () => {
             >
               Learn more about
             </Text>
-            <Image
+            {/* <Image
               style={{
                 width: ms(100),
                 height: ms(20),
@@ -308,7 +314,7 @@ const StepSix = () => {
               contentFit="contain"
               priority={"high"}
               contentPosition={"center"}
-            />
+            /> */}
           </View>
           <View
             style={{

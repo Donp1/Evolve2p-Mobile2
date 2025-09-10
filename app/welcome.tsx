@@ -1,17 +1,19 @@
 import {
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
   StatusBar,
   Platform,
+  ScrollView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { colors, contents } from "@/constants";
 import { ms, s, vs } from "react-native-size-matters";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
 
 const Welcome = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -26,61 +28,68 @@ const Welcome = () => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.top}>
-        <View style={styles.indicatorContainer}>
-          {contents.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.indicator,
-                activeIndex === index && { backgroundColor: colors.secondary },
-              ]}
-            />
-          ))}
+    <SafeAreaView style={globalStyles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: colors.primary }}
+      >
+        <View style={styles.top}>
+          <View style={styles.indicatorContainer}>
+            {contents.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.indicator,
+                  activeIndex === index && {
+                    backgroundColor: colors.secondary,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+          <>
+            {contents.map(
+              (item, index) =>
+                activeIndex === index && (
+                  <View style={styles.topContainer} key={index}>
+                    <Text style={styles.topHeading}>{item.heading}</Text>
+                    <Text style={styles.topText}>{item.text}</Text>
+                  </View>
+                )
+            )}
+          </>
         </View>
-        <>
+        <View style={styles.middle}>
           {contents.map(
             (item, index) =>
               activeIndex === index && (
-                <View style={styles.topContainer} key={index}>
-                  <Text style={styles.topHeading}>{item.heading}</Text>
-                  <Text style={styles.topText}>{item.text}</Text>
-                </View>
+                <Image
+                  key={index}
+                  source={item.image}
+                  style={{ flex: 0.8 }}
+                  contentFit="contain"
+                  priority={"high"}
+                />
               )
           )}
-        </>
-      </View>
-      <View style={styles.middle}>
-        {contents.map(
-          (item, index) =>
-            activeIndex === index && (
-              <Image
-                key={index}
-                source={item.image}
-                style={{ flex: 0.8 }}
-                contentFit="contain"
-                priority={"high"}
-              />
-            )
-        )}
-      </View>
-      <View style={styles.bottom}>
-        <Pressable
-          onPress={() => router.push("/login")}
-          style={[styles.btn, { backgroundColor: colors.gray2 }]}
-        >
-          <Text style={[styles.btnText, { color: colors.secondary }]}>
-            Log in
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push("/register")}
-          style={[styles.btn, { backgroundColor: "#4DF2BE" }]}
-        >
-          <Text style={styles.btnText}>Create account</Text>
-        </Pressable>
-      </View>
+        </View>
+        <View style={styles.bottom}>
+          <Pressable
+            onPress={() => router.push("/login")}
+            style={[styles.btn, { backgroundColor: colors.gray2 }]}
+          >
+            <Text style={[styles.btnText, { color: colors.secondary }]}>
+              Log in
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/register")}
+            style={[styles.btn, { backgroundColor: "#4DF2BE" }]}
+          >
+            <Text style={styles.btnText}>Create account</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -104,7 +113,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primary,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   top: {
     width: "100%",

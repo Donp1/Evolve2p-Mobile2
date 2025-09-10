@@ -1,13 +1,28 @@
 import React, { FC } from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
+import {
+  MaterialIcons,
+  Feather,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
 
 export type AlertType = "success" | "error" | "info";
 
 interface Button {
   text: string;
   onPress: () => void;
-  style?: object;
+  style?: ViewStyle; // individual button background/container style
+  textStyle?: TextStyle; // individual button text style
 }
 
 interface CustomAlertProps {
@@ -16,7 +31,7 @@ interface CustomAlertProps {
   message: string;
   buttons: Button[];
   onClose: () => void;
-  alertType: AlertType; // New prop to specify the alert type
+  alertType: AlertType;
 }
 
 const CustomAlert: FC<CustomAlertProps> = ({
@@ -27,68 +42,92 @@ const CustomAlert: FC<CustomAlertProps> = ({
   onClose,
   alertType,
 }) => {
-  // Define styles and icons based on the alert type
   const getAlertStyles = (type: AlertType) => {
     switch (type) {
       case "success":
         return {
-          container: styles.successContainer,
-          button: styles.successButton,
-          title: styles.successTitle,
-          buttonText: styles.successButtonText,
-          icon: <FontAwesome name="check-circle" size={50} color="#28a745" />, // Success icon
-          messageText: { color: "#28a745" },
+          icon: (
+            <MaterialCommunityIcons
+              name="check-decagram"
+              size={60}
+              color="#00D26A"
+            />
+          ),
+          titleColor: "#00D26A",
+          messageColor: "#00D26A",
+          buttonBg: "#00D26A",
+          buttonTextColor: "#000000",
         };
       case "error":
         return {
-          container: styles.errorContainer,
-          button: styles.errorButton,
-          title: styles.errorTitle,
-          buttonText: styles.errorButtonText,
-          icon: <MaterialIcons name="error" size={50} color="#dc3545" />, // Error icon
-          messageText: { color: "#dc3545" },
+          icon: <MaterialIcons name="error" size={60} color="#FF4D4F" />,
+          titleColor: "#FFFFFF",
+          messageColor: "#CCCCCC",
+          buttonBg: "#FF4D4F",
+          buttonTextColor: "#FFFFFF",
         };
+      case "info":
       default:
         return {
-          container: styles.infoContainer,
-          button: styles.infoButton,
-          title: styles.infoTitle,
-          buttonText: styles.infoButtonText,
-          icon: <MaterialIcons name="info" size={50} color="#17a2b8" />, // Info icon
-          messageText: { color: "#17a2b8" },
+          icon: <Feather name="info" size={60} color="#00BFFF" />,
+          titleColor: "#FFFFFF",
+          messageColor: "#CCCCCC",
+          buttonBg: "#00BFFF",
+          buttonTextColor: "#FFFFFF",
         };
     }
   };
 
-  const alertStyles = getAlertStyles(alertType);
+  const stylesForType = getAlertStyles(alertType);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
-      <View style={styles.overlay}>
-        <View style={[styles.alertContainer, alertStyles.container]}>
-          <View style={styles.iconContainer}>{alertStyles.icon}</View>
-          <Text style={[styles.title, alertStyles.title]}>{title}</Text>
-          <Text style={[styles.message, alertStyles.messageText]}>
-            {message}
-          </Text>
-          <View style={styles.buttonContainer}>
-            {buttons.map((button, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.button, alertStyles.button, button.style]}
-                onPress={() => {
-                  button.onPress();
-                  onClose(); // Close alert after button press
-                }}
-              >
-                <Text style={[styles.buttonText, alertStyles.buttonText]}>
-                  {button.text}
-                </Text>
-              </TouchableOpacity>
-            ))}
+    <Modal visible={visible} animationType="slide" transparent>
+      <SafeAreaView style={globalStyles.container}>
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            <View style={styles.iconWrapper}>{stylesForType.icon}</View>
+            <Text style={[styles.title, { color: stylesForType.titleColor }]}>
+              {title}
+            </Text>
+            <Text
+              style={[styles.message, { color: stylesForType.messageColor }]}
+            >
+              {message}
+            </Text>
+
+            <View style={styles.buttonContainer}>
+              {buttons.map((button, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.button,
+                    !button.style && {
+                      backgroundColor: stylesForType.buttonBg,
+                    },
+                    button.style,
+                  ]}
+                  onPress={() => {
+                    button.onPress();
+                    onClose();
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.buttonText,
+                      !button.textStyle && {
+                        color: stylesForType.buttonTextColor,
+                      },
+                      button.textStyle,
+                    ]}
+                  >
+                    {button.text}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
@@ -96,83 +135,47 @@ const CustomAlert: FC<CustomAlertProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  modalBox: {
+    width: "100%",
+    backgroundColor: "#1A1A1A",
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    alignItems: "center",
+    minHeight: "50%",
     justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
-  alertContainer: {
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-    alignItems: "center",
-  },
-  iconContainer: {
+  iconWrapper: {
     marginBottom: 20,
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "600",
     marginBottom: 10,
-  },
-  message: {
-    fontSize: 16,
-    marginBottom: 20,
     textAlign: "center",
   },
+  message: {
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: 25,
+  },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
     width: "100%",
+    gap: 10,
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginHorizontal: 5,
+    width: "100%",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
   },
   buttonText: {
-    color: "white",
     fontSize: 16,
-  },
-  // Success style
-  successContainer: {
-    // backgroundColor: "#d4edda",
-    backgroundColor: "black",
-  },
-  successButton: {
-    backgroundColor: "#28a745",
-  },
-  successTitle: {
-    color: "#155724",
-  },
-  successButtonText: {
-    color: "#ffffff",
-  },
-  // Error style
-  errorContainer: {
-    backgroundColor: "black",
-  },
-  errorButton: {
-    backgroundColor: "#dc3545",
-  },
-  errorTitle: {
-    color: "#721c24",
-  },
-  errorButtonText: {
-    color: "#ffffff",
-  },
-  // Info style
-  infoContainer: {
-    backgroundColor: "black",
-  },
-  infoButton: {
-    backgroundColor: "#17a2b8",
-  },
-  infoTitle: {
-    color: "#0c5460",
-  },
-  infoButtonText: {
-    color: "#ffffff",
+    fontWeight: "600",
   },
 });
 

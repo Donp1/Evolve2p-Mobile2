@@ -2,7 +2,6 @@ import {
   Keyboard,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -21,11 +20,14 @@ import StepOne from "@/components/createAccount/stepone";
 import StepTwo from "@/components/createAccount/steptwo";
 import StepThree from "@/components/createAccount/stepthree";
 import StepFour from "@/components/createAccount/stepfour";
-import { DataProp } from "@/components/SelectDropdown";
 import { checkToken, createUser, getUser } from "@/utils/countryStore";
 import StepFive from "@/components/createAccount/stepfive";
 import StepSix from "@/components/createAccount/stepsix";
 import { useAlert } from "@/components/AlertService";
+import { CountryDataProp } from "@/context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
+import { set } from "lodash";
 
 const Register = () => {
   const goBack = () => {
@@ -37,7 +39,8 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [stepCount, setStepCount] = useState(1);
-  const [selectedCountry, setSelectedCountry] = useState<DataProp | null>(null);
+  const [selectedCountry, setSelectedCountry] =
+    useState<CountryDataProp | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [username, setUsername] = useState("");
   const [regIsLoading, setRegIsLoading] = useState(false);
@@ -53,20 +56,18 @@ const Register = () => {
         country: selectedCountry?.name,
         phone: phoneNumber,
         username,
+        emailVerified: true,
       });
       setRegIsLoading(false);
       if (res?.success) {
-        const tokenData = await checkToken(res?.accessToken);
-        const parsedUser = await getUser(tokenData?.user?.email);
         await setItemAsync(
           "authToken",
-          JSON.stringify({ token: res?.accessToken, user: parsedUser.user })
+          JSON.stringify({ token: res?.accessToken })
         );
-
         showAlert(
           "Congratulations!!!",
           "User registered successfully",
-          [{ text: "Next", onPress: () => setStepCount((c) => c + 1) }],
+          [{ text: "Set Pin", onPress: () => setStepCount((c) => c + 1) }],
           "success"
         );
         return;
@@ -95,7 +96,7 @@ const Register = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={globalStyles.container}>
       {AlertComponent}
       <View style={styles.topBar}>
         <Pressable onPress={goBack} style={{ padding: 15 }}>
@@ -118,13 +119,15 @@ const Register = () => {
 
       {stepCount === 1 && (
         <StepOne
-          isReset={false}
           setStepCount={setStepCount}
           setEmail={setEmail}
           email={email}
         />
       )}
       {stepCount === 2 && (
+        <StepThree isReset={false} email={email} setStepCount={setStepCount} />
+      )}
+      {stepCount === 3 && (
         <StepTwo
           password={password}
           setPassword={setPassword}
@@ -134,9 +137,6 @@ const Register = () => {
           email={email}
           isReset={false}
         />
-      )}
-      {stepCount === 3 && (
-        <StepThree isReset={false} email={email} setStepCount={setStepCount} />
       )}
       {stepCount === 4 && (
         <StepFour
@@ -153,8 +153,13 @@ const Register = () => {
         />
       )}
 
-      {stepCount === 5 && <StepFive setStepCount={setStepCount} />}
-      {stepCount === 6 && <StepSix />}
+      {stepCount === 5 && (
+        <StepFive
+          handlFinalRegistration={handlFinalRegistration}
+          setStepCount={setStepCount}
+        />
+      )}
+      {/* {stepCount === 6 && <StepSix />} */}
     </SafeAreaView>
   );
 };

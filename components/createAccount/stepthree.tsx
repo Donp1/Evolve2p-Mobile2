@@ -39,7 +39,7 @@ const StepThree = ({ setStepCount, email, isReset }: pageProp) => {
           setIsLoading(false);
           showAlert(
             "Success",
-            res?.message,
+            "Email verified successfully",
             [{ text: "Next", onPress: () => setStepCount((c) => c + 1) }],
             "success"
           );

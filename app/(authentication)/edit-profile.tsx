@@ -1,6 +1,6 @@
 import {
+  ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,28 +13,34 @@ import { router } from "expo-router";
 import { colors } from "@/constants";
 import { FontAwesome } from "@expo/vector-icons";
 import { ms } from "react-native-size-matters";
-import Spinner from "@/components/Spinner";
 import SelectDropdown from "@/components/SelectDropdown";
 import { CountryDataProp } from "@/context";
-import { getItemAsync } from "expo-secure-store";
-import { getAllCountries } from "@/utils/countryStore";
+import { getItemAsync, setItemAsync, deleteItemAsync } from "expo-secure-store";
+import {
+  deleteAccount,
+  getAllCountries,
+  updateUser,
+} from "@/utils/countryStore";
 import { useQuery } from "@tanstack/react-query";
-import { set } from "lodash";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { Image } from "expo-image";
+import { useAlert } from "@/components/AlertService";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { useUserStore } from "@/store/userStore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditProfile = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-
-  const [userExist, setUserExist] = useState(false);
   const [currentCountry, setCurrentCountry] = useState("");
   const [date, setDate] = useState<Date | null>(null);
-
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] =
     useState<CountryDataProp | null>(null);
+
+  const { AlertComponent, showAlert } = useAlert();
+  const user = useUserStore((state: any) => state.user);
 
   const {
     data: countriesData,
@@ -44,17 +50,12 @@ const EditProfile = () => {
   } = useQuery({ queryKey: ["countries"], queryFn: getAllCountries });
 
   useEffect(() => {
-    (async () => {
-      const res = await getItemAsync("authToken");
-      if (res) {
-        const parsedUser = JSON.parse(res);
-        setEmail(parsedUser?.user?.email);
-        setUsername(parsedUser?.user?.username);
-        setCurrentCountry(parsedUser?.user?.country);
-        setPhoneNumber(parsedUser?.user?.phone);
-      }
-    })();
-  }, [phoneNumber]);
+    setEmail(user?.email);
+    setUsername(user?.username);
+    setCurrentCountry(user?.country);
+    setPhoneNumber(user?.phone);
+    setDate(new Date(user?.DOB));
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isError && countriesData) {
@@ -77,11 +78,116 @@ const EditProfile = () => {
     }
   }, [phoneNumber, countriesData]);
 
+  const handleUpdate = async () => {
+    if (!phoneNumber || !selectedCountry || !date) {
+      setLoading(false);
+      showAlert(
+        "Error",
+        "Please fill in all fields",
+        [{ onPress: () => {}, text: "Close" }],
+        "error"
+      );
+      return;
+    }
+
+    const isNumberValid = isValidPhoneNumber(phoneNumber, {
+      defaultCallingCode: selectedCountry?.phoneCode,
+      defaultCountry: selectedCountry?.abbrev,
+    });
+
+    if (!isNumberValid) {
+      setLoading(false);
+      showAlert(
+        "Error",
+        "Phone number invalid format",
+        [{ onPress: () => {}, text: "Close" }],
+        "error"
+      );
+      return;
+    }
+
+    
+    setLoading(true);
+    const userUpdate = await updateUser({
+      country: selectedCountry.name,
+      DOB: date,
+      phone: phoneNumber,
+    });
+
+    console.log(updateUser);
+
+    if (!userUpdate?.success) {
+      setLoading(false);
+      showAlert(
+        "Error",
+        userUpdate?.message,
+        [{ onPress: () => {}, text: "Close" }],
+        "error"
+      );
+      return;
+    }
+
+    const res = await getItemAsync("authToken");
+    if (res) {
+      const parsedUser = JSON.parse(res);
+      parsedUser.user.DOB = date;
+      parsedUser.user.country = selectedCountry?.name;
+      parsedUser.user.phone = phoneNumber;
+
+      setDate(parsedUser.user.DOB);
+      setCurrentCountry(parsedUser.user.country);
+      setPhoneNumber(parsedUser.user.phone);
+
+      await setItemAsync("authToken", JSON.stringify(parsedUser));
+    }
+
+    showAlert(
+      "Successfull",
+      userUpdate?.message,
+      [{ onPress: () => {}, text: "Close" }],
+      "success"
+    );
+    setLoading(false);
+  };
+
+  const hanldeDelete = async () => {
+    try {
+      showAlert(
+        "Account Deletion: Not reversable",
+        "Are you sure?",
+        [
+          {
+            onPress: async () => {
+              const res = await deleteAccount();
+              if (res?.success) {
+                await deleteItemAsync("authToken");
+                router.replace("/");
+              }
+            },
+            text: "Yes",
+            style: { backgroundColor: colors.red },
+            textStyle: { color: colors.primary },
+          },
+          {
+            onPress: () => {},
+            text: "No",
+            style: { backgroundColor: colors.accent },
+            textStyle: { color: colors.primary },
+          },
+        ],
+        "info"
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const goBack = () => {
     if (router.canGoBack()) router.back();
   };
   return (
     <SafeAreaView style={globalStyles.container}>
+      {AlertComponent}
       <View style={globalStyles.topBar}>
         <Pressable
           onPress={goBack}
@@ -104,30 +210,41 @@ const EditProfile = () => {
             Edit Profile
           </Text>
         </Pressable>
-        <Text
-          style={{
-            fontSize: ms(14),
-            fontWeight: 700,
-            color: colors.accent,
-            paddingHorizontal: 15,
-          }}
-        >
-          Save
-        </Text>
+        {loading ? (
+          <View style={{ paddingHorizontal: 15 }}>
+            <ActivityIndicator size="large" color="#4caf50" />
+          </View>
+        ) : (
+          <Pressable style={{ paddingVertical: 10 }} onPress={handleUpdate}>
+            <Text
+              style={{
+                fontSize: ms(14),
+                fontWeight: 700,
+                color: colors.accent,
+                paddingHorizontal: 15,
+              }}
+            >
+              Save
+            </Text>
+          </Pressable>
+        )}
       </View>
 
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: colors.primary }}
+      >
         <View style={{ paddingHorizontal: 15, marginVertical: 20 }}>
           <View style={globalStyles.form}>
-            {/* <View style={{ gap: 10 }}>
+            <View style={{ gap: 10 }}>
               <Text style={globalStyles.formLabel}>Email</Text>
               <View style={globalStyles.formInputContainer}>
                 <TextInput
                   defaultValue={email}
+                  editable={false}
                   style={globalStyles.formInput}
                 />
               </View>
-            </View> */}
+            </View>
 
             <View style={{ gap: 10 }}>
               <Text style={styles.formLabel}>Username</Text>
@@ -143,14 +260,12 @@ const EditProfile = () => {
                     @
                   </Text>
                   <TextInput
-                    style={styles.formInput}
+                    style={globalStyles.formInput}
                     placeholder="Enter your username"
                     placeholderTextColor={colors.secondary}
                     onChangeText={(e) => setUsername(e)}
-                    // onBlur={handleUsername}
-                    // onSubmitEditing={handleUsername}
                     defaultValue={username}
-                    editable={isLoading ? false : true}
+                    editable={false}
                   />
                 </View>
 
@@ -267,12 +382,14 @@ const EditProfile = () => {
               </Text>
 
               <Pressable
+                onPress={hanldeDelete}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 10,
                   marginTop: 20,
                   justifyContent: "center",
+                  paddingVertical: 10,
                 }}
               >
                 <FontAwesome size={ms(13)} color={colors.red} name="trash" />

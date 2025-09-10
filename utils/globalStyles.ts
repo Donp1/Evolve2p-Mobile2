@@ -9,8 +9,8 @@ const itemWidth = (width - 40) / 2;
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    backgroundColor: colors.gray2,
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   topBar: {
     width: "100%",
@@ -52,7 +52,7 @@ export const globalStyles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: 20,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    // paddingBottom: 20,
     flex: 1,
     position: "fixed",
     bottom: 0,
@@ -98,5 +98,48 @@ export const globalStyles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.gray,
     marginVertical: 10,
+  },
+  sectionBox: {
+    borderRadius: 8,
+    backgroundColor: colors.gray2,
+    padding: 10,
+    marginTop: 10,
+  },
+  sectionMain: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: ms(15),
+    width: "100%",
+  },
+
+  top: {
+    backgroundColor: colors.gray2,
+    borderTopRightRadius: 15,
+    borderTopLeftRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  middle: {
+    backgroundColor: colors.gray2,
+    // borderTopRightRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  bottom: {
+    backgroundColor: colors.gray2,
+    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });

@@ -5,19 +5,24 @@ import { OtpInput } from "react-native-otp-entry";
 import CustomeOtp from "../CustomeOtp";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
-import { updateUser } from "@/utils/countryStore";
+import { getUser, updateUser } from "@/utils/countryStore";
 import Spinner from "../Spinner";
 import { useAlert } from "../AlertService";
+import { router } from "expo-router";
+import { useUserStore } from "@/store/userStore";
 
 interface pageProp {
   setStepCount: Dispatch<SetStateAction<number>>;
+  handlFinalRegistration: () => void;
 }
 
-const StepFive = ({ setStepCount }: pageProp) => {
+const StepFive = ({ setStepCount, handlFinalRegistration }: pageProp) => {
   const [pin, setPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const { AlertComponent, showAlert } = useAlert();
+
+  const setUser = useUserStore((state) => state.setUser);
 
   const handleOtp = async (confirmPin: string) => {
     try {
@@ -26,14 +31,19 @@ const StepFive = ({ setStepCount }: pageProp) => {
         const res = await updateUser({ pin });
         setIsLoading(false);
         if (res?.success) {
+          const user = await getUser();
+          setUser(user.user);
           showAlert(
             "Success",
             "Pin set successfully",
-            [{ text: "Next", onPress: () => setStepCount((c) => c + 1) }],
+            [
+              {
+                text: "Kyc Verification",
+                onPress: () => router.push("/kycVerification"),
+              },
+            ],
             "success"
           );
-
-          return;
         }
 
         if (res?.error) {
@@ -106,7 +116,13 @@ const StepFive = ({ setStepCount }: pageProp) => {
           <CustomeOtp focus={false} handleOtp={handleOtp} numberofDigits={4} />
         </View>
       </View>
-      <View style={{ alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: 20,
+        }}
+      >
         {isLoading && <Spinner width={40} height={40} />}
       </View>
     </CreateContainer>

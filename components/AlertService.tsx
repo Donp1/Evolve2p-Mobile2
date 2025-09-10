@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import CustomAlert, { AlertType } from "./CustomeAlert";
+import { ViewStyle, TextStyle } from "react-native";
+
+// Define AlertButton to match CustomAlert's expected structure
+type AlertButton = {
+  text: string;
+  onPress: () => void;
+  style?: ViewStyle; // Optional button container style
+  textStyle?: TextStyle; // Optional text style
+};
 
 // Create a custom hook for handling alerts
 export const useAlert = () => {
@@ -7,20 +16,20 @@ export const useAlert = () => {
   const [alertProps, setAlertProps] = useState<{
     title: string;
     message: string;
-    buttons: { text: string; onPress: () => void }[];
-    alertType: AlertType; // Add the alert type to the state
+    buttons: AlertButton[];
+    alertType: AlertType;
   }>({
     title: "",
     message: "",
     buttons: [],
-    alertType: "info", // Default to 'info' type
+    alertType: "info",
   });
 
   const showAlert = (
     title: string,
     message: string,
-    buttons: { text: string; onPress: () => void }[],
-    alertType: AlertType = "info" // Default to 'info' if not provided
+    buttons: AlertButton[],
+    alertType: AlertType = "info"
   ) => {
     setAlertProps({ title, message, buttons, alertType });
     setAlertVisible(true);
@@ -37,7 +46,7 @@ export const useAlert = () => {
       message={alertProps.message}
       buttons={alertProps.buttons}
       onClose={hideAlert}
-      alertType={alertProps.alertType} // Pass the alertType to CustomAlert
+      alertType={alertProps.alertType}
     />
   );
 

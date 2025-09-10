@@ -7,7 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getItemAsync } from "expo-secure-store";
 import { checkToken } from "@/utils/countryStore";
-import * as Linking from "expo-linking";
+import { Platform, View, StatusBar as RNStatusBar } from "react-native";
+import { useCoinPriceStore } from "@/context";
 
 SplashScreen.hide();
 
@@ -46,8 +47,21 @@ export default function RootLayoutNav() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar backgroundColor={colors.gray2} animated style="light" />
-      <Stack>
+      {/* {Platform.OS === "android" && (
+        <View
+          style={{
+            height: RNStatusBar.currentHeight,
+            backgroundColor: colors.gray2, // your desired background
+          }}
+        />
+      )} */}
+      <StatusBar
+        // backgroundColor="transparent"
+        translucent
+        animated
+        style="light"
+      />
+      <Stack screenOptions={{ animation: "fade" }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />

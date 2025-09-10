@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   Pressable,
+  ImageSourcePropType,
 } from "react-native";
 import { ms } from "react-native-size-matters";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -17,7 +18,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 const { width } = Dimensions.get("window");
 interface dataProps {
   id: number;
-  image: string;
+  image: ImageSourcePropType | undefined;
   heading: string;
   description: string;
 }
@@ -28,13 +29,14 @@ export default function StoryBox() {
       heading: " Increase Buy/Sell Limits",
       description: "Unlock higher trading limits by upgrading verification.",
       id: 1,
-      image: "https://dummyimage.com/300",
+      image: require("@/assets/images/type-limits.png"),
     },
     {
-      heading: " Increase Buy/Sell Limits",
-      description: "Unlock higher trading limits by upgrading verification.",
+      heading: "Enable 2FA Security",
+      description:
+        "Protect your account and withdrawals with two-factor authentication.",
       id: 2,
-      image: "https://dummyimage.com/300",
+      image: require("@/assets/images/type-2fa.png"),
     },
   ]);
 
@@ -68,7 +70,7 @@ export default function StoryBox() {
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
             <Image
-              source={{ uri: item.image }}
+              source={item.image}
               style={styles.image}
               resizeMode="cover"
             />

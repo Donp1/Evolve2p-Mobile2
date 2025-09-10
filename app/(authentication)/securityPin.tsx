@@ -1,14 +1,14 @@
 import {
+  Alert,
   Platform,
   Pressable,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { colors } from "@/constants";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
@@ -18,13 +18,30 @@ import { ms, s } from "react-native-size-matters";
 import Spinner from "@/components/Spinner";
 import CustomeOtp from "@/components/CustomeOtp";
 import { useAlert } from "@/components/AlertService";
-import { checkToken, getUser } from "@/utils/countryStore";
-import { getItemAsync } from "expo-secure-store";
+import { checkPin, checkToken, getUser } from "@/utils/countryStore";
+import { getItemAsync, deleteItemAsync } from "expo-secure-store";
+import { useUserStore } from "@/store/userStore";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useCoinPriceStore, useNotificationStore } from "@/context";
 
 const SecurityPin = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { showAlert, AlertComponent } = useAlert();
+
+  const setUser = useUserStore((state: any) => state.setUser);
+
+  const setNotifications = useNotificationStore(
+    (state) => state.setNotifications
+  );
+  const user = useUserStore((state: any) => state.user);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     await deleteItemAsync("authToken");
+  //     router.replace("/login");
+  //   })();
+  // }, []);
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -32,56 +49,30 @@ const SecurityPin = () => {
 
   const handleOtp = async (pin: string) => {
     setIsLoading(true);
-
     try {
-      const authData = await getItemAsync("authToken");
-      const token = authData ? JSON.parse(authData)?.token : null;
-      const res = await checkToken(token);
-      if (res?.error) {
-        setIsLoading(false);
+      const res = await checkPin(pin);
+
+      if (res.error) {
         showAlert(
           "Error",
-          res?.message,
-          [{ text: "Close", onPress() {} }],
+          res?.message || "An error occurred while checking your PIN.",
+          [{ text: "OK", onPress: () => {} }],
           "error"
         );
+        setIsLoading(false);
         return;
       }
+      const userRes = await getUser();
 
-      if (res?.success) {
-        const userRes = await getUser(res?.user?.email);
+      if (res?.success && userRes?.success) {
+        setUser(userRes?.user);
+        setNotifications(userRes?.user?.notifications || []);
         setIsLoading(false);
-        if (userRes?.error) {
-          setIsLoading(false);
-          showAlert(
-            "Error",
-            userRes?.message,
-            [{ text: "Close", onPress() {} }],
-            "error"
-          );
-          return;
-        }
-        if (userRes?.success) {
-          if (userRes?.user?.pin == pin) {
-            router.replace("/(authentication)/(tabs)/home");
-          } else {
-            showAlert(
-              "Error",
-              "Invalid Pin",
-              [{ text: "Close", onPress() {} }],
-              "error"
-            );
-          }
-        }
+        router.push("/(authentication)/(tabs)/home");
       }
     } catch (error) {
       setIsLoading(false);
-      showAlert(
-        "Error",
-        String(error),
-        [{ text: "Close", onPress() {} }],
-        "error"
-      );
+      console.log(error);
     }
   };
 
@@ -115,7 +106,7 @@ const SecurityPin = () => {
         </View>
 
         <View style={globalStyles.bottomContainer}>
-          <View>
+          <View style={{ marginBottom: 20 }}>
             <Link href="/forgotPin">
               <Text
                 style={{

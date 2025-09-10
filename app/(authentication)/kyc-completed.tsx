@@ -1,4 +1,4 @@
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "expo-router/build/hooks";
 import { globalStyles } from "@/utils/globalStyles";
@@ -10,6 +10,7 @@ import KycSuccess from "@/components/KycSuccess";
 import KycFailed from "@/components/KyCFailed";
 import { useAlert } from "@/components/AlertService";
 import { getItemAsync, setItemAsync } from "expo-secure-store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const KYCCompleted = () => {
   const [status, setStatus] = useState("");
@@ -31,15 +32,23 @@ const KYCCompleted = () => {
       const data = await getVerificationStatus(id);
       if (data?.status == "completed") {
         const res = await updateUser({ kycVerified: true });
+
         if (res?.success) {
           setStatus(data?.status);
-          const res = await getItemAsync("authToken");
-          if (res) {
-            const parsedUser = JSON.parse(res);
-            parsedUser.user.kycVerified = true;
-            await setItemAsync("authToken", JSON.stringify(parsedUser));
-            setIsLoading(false);
-          }
+          setIsLoading(false);
+          // showAlert(
+          //   "KYC Verification completed successfully",
+          //   res?.message,
+          //   [
+          //     {
+          //       text: "Proceed to Dashboard",
+          //       onPress() {
+          //         router.push("/home");
+          //       },
+          //     },
+          //   ],
+          //   "success"
+          // );
         } else {
           showAlert(
             "Error",

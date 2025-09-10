@@ -4,6 +4,8 @@ import { colors } from "@/constants";
 import WebView from "react-native-webview";
 import * as Linking from "expo-linking";
 import Spinner from "./Spinner";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
 
 interface pageProps {
   show: boolean;
@@ -24,37 +26,39 @@ const KycWebview = ({ setShow, show, inquiry_id }: pageProps) => {
         transparent={true}
         visible={show}
       >
-        <View style={{ flex: 1, backgroundColor: "white" }}>
-          <WebView
-            allowsBackForwardNavigationGestures
-            mediaCapturePermissionGrantType="grant"
-            javaScriptEnabled={true}
-            source={{
-              uri: `https://withpersona.com/verify?inquiry-id=${inquiry_id}&redirect-uri=${encodeURIComponent(
-                redirectUri
-              )}`,
-            }}
-            startInLoadingState
-            style={{ flex: 1, width: "100%", height: "100%" }}
-            renderLoading={() => (
-              <View
-                style={{
-                  flex: 1,
-                  width: "100%",
-                  height: "100%",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator
-                  color="#0000ff"
-                  size="large"
-                  style={{ justifyContent: "center" }}
-                />
-              </View>
-            )}
-          />
-        </View>
+        <SafeAreaView style={globalStyles.container}>
+          <View style={{ flex: 1, backgroundColor: "white" }}>
+            <WebView
+              allowsBackForwardNavigationGestures
+              mediaCapturePermissionGrantType="grant"
+              javaScriptEnabled={true}
+              source={{
+                uri: `https://withpersona.com/verify?inquiry-id=${inquiry_id}&redirect-uri=${encodeURIComponent(
+                  redirectUri
+                )}`,
+              }}
+              startInLoadingState
+              style={{ flex: 1, width: "100%", height: "100%" }}
+              renderLoading={() => (
+                <View
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator
+                    color="#0000ff"
+                    size="large"
+                    style={{ justifyContent: "center" }}
+                  />
+                </View>
+              )}
+            />
+          </View>
+        </SafeAreaView>
       </Modal>
     </>
   );

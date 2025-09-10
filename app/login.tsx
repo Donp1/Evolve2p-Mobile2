@@ -1,6 +1,8 @@
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,8 +18,17 @@ import { globalStyles } from "@/utils/globalStyles";
 import { ms } from "react-native-size-matters";
 import Spinner from "@/components/Spinner";
 import { useAlert } from "@/components/AlertService";
-import { checkToken, getUser, login } from "@/utils/countryStore";
+import {
+  checkToken,
+  getUser,
+  login,
+  registerForPushNotificationsAsync,
+} from "@/utils/countryStore";
 import { setItemAsync } from "expo-secure-store";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 
 const Login = () => {
   const [passwordIsSecure, setPasswordIsSecure] = useState(true);
@@ -33,6 +44,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     setIsLoading(true);
+
     try {
       const res = await login({ email, password });
 
@@ -48,28 +60,39 @@ const Login = () => {
       }
 
       if (res?.success) {
-        const tokenData = await checkToken(res?.accessToken);
-        const parsedUser = await getUser(tokenData?.user?.email);
         await setItemAsync(
           "authToken",
-          JSON.stringify({ token: res?.accessToken, user: parsedUser.user })
+          JSON.stringify({ token: res?.accessToken })
+        );
+
+        setIsLoading(false);
+        router.push("/securityPin");
+        // showAlert(
+        //   "Congratulation!!!",
+        //   "Logged in Successfully",
+        //   [{ text: "Proceed", onPress: () => router.push("/securityPin") }],
+        //   "success"
+        // );
+      }
+    } catch (error: any) {
+      if (error?.message === "Network request failed") {
+        showAlert(
+          "Error",
+          "Unable to connect. Please check your internet connection.",
+          [{ text: "Close", onPress() {} }],
+          "error"
         );
         setIsLoading(false);
-        showAlert(
-          "Congratulation!!!",
-          "Logged in Successfully",
-          [{ text: "Proceed", onPress: () => router.push("/securityPin") }],
-          "success"
-        );
+        return;
       }
-    } catch (error) {
-      setIsLoading(false);
       showAlert(
         "Error",
         String(error),
         [{ text: "Close", onPress() {} }],
         "error"
       );
+      setIsLoading(false);
+      console.log(error);
     }
   };
 
@@ -86,9 +109,10 @@ const Login = () => {
             />
           </Pressable>
         </View>
-        <ScrollView
-          style={{ flexGrow: 1 }}
-          contentContainerStyle={{ flexGrow: 1, backgroundColor: "red" }}
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          enableOnAndroid={true}
+          extraScrollHeight={20} // pushes content above keyboard
         >
           <CreateContainer
             heading="Welcome Back!"
@@ -221,7 +245,8 @@ const Login = () => {
               </View>
             </View>
           </CreateContainer>
-        </ScrollView>
+        </KeyboardAwareScrollView>
+        {/* </KeyboardAvoidingView> */}
       </SafeAreaView>
     </>
   );

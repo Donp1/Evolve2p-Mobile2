@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { globalStyles } from "@/utils/globalStyles";
 import { ms } from "react-native-size-matters";
 import { colors } from "@/constants";
@@ -7,13 +7,24 @@ import { Image } from "expo-image";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {
   AntDesign,
+  Feather,
   FontAwesome,
   FontAwesome5,
   Ionicons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import PreferedCurrency from "@/components/PreferedCurrency";
-import { router } from "expo-router";
+import PreferedCurrency, {
+  SelectedCurrency,
+} from "@/components/PreferedCurrency";
+import { Link, router } from "expo-router";
+import { deleteItemAsync, getItemAsync } from "expo-secure-store";
+import { useUserStore } from "@/store/userStore";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const handleLogout = async () => {
+  await deleteItemAsync("authToken");
+  router.replace("/");
+};
 
 const ContentBox = ({
   icon,
@@ -29,7 +40,7 @@ const ContentBox = ({
   modifyContent?: React.ReactNode;
 }) => {
   return (
-    <Pressable onPress={onPress} style={styles.sectionMain}>
+    <Pressable onPress={onPress} style={globalStyles.sectionMain}>
       <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
         {icon}
         <Text
@@ -52,22 +63,50 @@ const ContentBox = ({
 };
 
 const Prifile = () => {
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const [selectedCurrency, setSelectedCurrency] =
+    useState<SelectedCurrency | null>(null);
+
   const [preferedCoinVisible, setPreferedCoinVisible] = useState(false);
+
+  const user = useUserStore((state: any) => state.user);
+
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+  };
   return (
-    <View style={globalStyles.container}>
-      <View style={[globalStyles.topBar, { padding: 10 }]}>
-        <Text
-          style={{ fontWeight: 500, fontSize: ms(16), color: colors.secondary }}
+    <SafeAreaView style={globalStyles.container}>
+      <View style={globalStyles.topBar}>
+        <Pressable
+          onPress={goBack}
+          style={{
+            padding: 15,
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center",
+          }}
         >
-          Profile
-        </Text>
+          <FontAwesome name="chevron-left" color={colors.secondary} size={15} />
+          <Text
+            style={{
+              lineHeight: 24,
+              fontWeight: 500,
+              fontSize: ms(16),
+              color: colors.secondary,
+            }}
+          >
+            Profile
+          </Text>
+        </Pressable>
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 100 }}
+        contentContainerStyle={{
+          paddingHorizontal: 10,
+          paddingBottom: 100,
+          backgroundColor: colors.primary,
+        }}
       >
-        <View style={styles.sectionBox}>
+        <View style={globalStyles.sectionBox}>
           <Pressable
             onPress={() => router.push("/edit-profile")}
             style={{
@@ -106,13 +145,17 @@ const Prifile = () => {
                       color: colors.white2,
                     }}
                   >
-                    @david1234
+                    @{user.username}
                   </Text>
-                  <MaterialCommunityIcons
-                    name="check-decagram"
-                    size={15}
-                    color={colors.accent}
-                  />
+                  {!user?.kycVerified || !user?.emailVerified ? (
+                    <Feather name="user-x" size={15} color={colors.red} />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="check-decagram"
+                      size={15}
+                      color={colors.accent}
+                    />
+                  )}
                 </View>
                 <Text
                   style={{
@@ -146,9 +189,9 @@ const Prifile = () => {
           ACCOUNT
         </Text>
 
-        <View style={styles.sectionBox}>
+        <View style={globalStyles.sectionBox}>
           <ContentBox
-            onPress={() => {}}
+            onPress={() => router.push("/account-verification")}
             text="Account verification"
             icon={
               <FontAwesome5
@@ -157,9 +200,33 @@ const Prifile = () => {
                 color={colors.accent}
               />
             }
+            modify={!user?.emailVerified || !user?.kycVerified}
+            modifyContent={
+              <>
+                <View
+                  style={{
+                    backgroundColor: "#3A3A3A",
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 16,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontWeight: 500,
+                      fontSize: ms(12),
+                      color: colors.red,
+                    }}
+                  >
+                    Not Verified
+                  </Text>
+                </View>
+              </>
+            }
           />
+
           <ContentBox
-            onPress={() => {}}
+            onPress={() => router.push("/notification")}
             text="Notification"
             icon={
               <Ionicons
@@ -170,7 +237,7 @@ const Prifile = () => {
             }
           />
           <ContentBox
-            onPress={() => {}}
+            onPress={() => router.push("/transaction-limit")}
             text="Transaction Limits"
             icon={
               <MaterialCommunityIcons
@@ -205,7 +272,7 @@ const Prifile = () => {
                     color: colors.secondary,
                   }}
                 >
-                  {selectedCurrency}
+                  {selectedCurrency?.code}
                 </Text>
                 <FontAwesome
                   name="chevron-down"
@@ -234,7 +301,7 @@ const Prifile = () => {
         >
           SECURITY
         </Text>
-        <View style={styles.sectionBox}>
+        <View style={globalStyles.sectionBox}>
           <ContentBox
             icon={
               <MaterialCommunityIcons
@@ -244,7 +311,7 @@ const Prifile = () => {
               />
             }
             text="Change Password"
-            onPress={() => {}}
+            onPress={() => router.push("/change-password")}
           />
           <ContentBox
             icon={
@@ -255,7 +322,7 @@ const Prifile = () => {
               />
             }
             text="Two Factor Authentication"
-            onPress={() => {}}
+            onPress={() => router.push("/two-factor-auth")}
           />
           <ContentBox
             icon={
@@ -266,7 +333,7 @@ const Prifile = () => {
               />
             }
             text="Change your Security PIN"
-            onPress={() => {}}
+            onPress={() => router.push("/change-pin")}
           />
         </View>
 
@@ -280,7 +347,7 @@ const Prifile = () => {
         >
           OTHERS
         </Text>
-        <View style={styles.sectionBox}>
+        <View style={globalStyles.sectionBox}>
           <ContentBox
             icon={
               <Image
@@ -290,7 +357,7 @@ const Prifile = () => {
               />
             }
             text="App Language"
-            onPress={() => {}}
+            onPress={() => router.push("/language")}
           />
           <ContentBox
             icon={
@@ -322,8 +389,8 @@ const Prifile = () => {
                 style={{ width: ms(25), height: ms(25) }}
               />
             }
-            text="About Evolv2p"
-            onPress={() => {}}
+            text="About Evolve2p"
+            onPress={() => router.push("/about-us")}
           />
         </View>
 
@@ -335,14 +402,17 @@ const Prifile = () => {
             marginTop: 30,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable
+            onPress={handleLogout}
+            style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+          >
             <AntDesign name="logout" size={ms(14)} color={colors.red} />
             <Text
               style={{ fontWeight: 700, fontSize: ms(14), color: colors.red }}
             >
               Log out
             </Text>
-          </View>
+          </Pressable>
           <Text
             style={{
               fontWeight: 500,
@@ -356,28 +426,14 @@ const Prifile = () => {
       </ScrollView>
 
       <PreferedCurrency
-        selectedCurrency={selectedCurrency}
-        setSelectedCurrency={setSelectedCurrency}
-        setVisible={setPreferedCoinVisible}
         visible={preferedCoinVisible}
+        onSelect={setSelectedCurrency}
+        onClose={() => setPreferedCoinVisible(false)}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default Prifile;
 
-const styles = StyleSheet.create({
-  sectionBox: {
-    borderRadius: 8,
-    backgroundColor: colors.gray2,
-    padding: 10,
-    marginTop: 10,
-  },
-  sectionMain: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: ms(15),
-  },
-});
+const styles = StyleSheet.create({});

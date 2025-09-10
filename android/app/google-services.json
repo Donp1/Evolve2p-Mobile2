@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "429061880610",
+    "project_id": "evolve2p-cd1ca",
+    "storage_bucket": "evolve2p-cd1ca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:429061880610:android:6655f9ccac7b6e4e1e437b",
+        "android_client_info": {
+          "package_name": "com.donflexy.Evove2p"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB97QTeMNZE7NuCeRIimbsaCfmNXSoCXms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
