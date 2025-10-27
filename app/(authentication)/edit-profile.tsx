@@ -76,10 +76,10 @@ const EditProfile = () => {
       };
       setSelectedCountry(countryData);
     }
-  }, [phoneNumber, countriesData]);
+  }, [countriesData]);
 
   const handleUpdate = async () => {
-    if (!phoneNumber || !selectedCountry || !date) {
+    if (!phoneNumber || !selectedCountry) {
       setLoading(false);
       showAlert(
         "Error",
@@ -106,7 +106,6 @@ const EditProfile = () => {
       return;
     }
 
-    
     setLoading(true);
     const userUpdate = await updateUser({
       country: selectedCountry.name,
@@ -114,9 +113,7 @@ const EditProfile = () => {
       phone: phoneNumber,
     });
 
-    console.log(updateUser);
-
-    if (!userUpdate?.success) {
+    if (userUpdate?.error) {
       setLoading(false);
       showAlert(
         "Error",
@@ -127,26 +124,15 @@ const EditProfile = () => {
       return;
     }
 
-    const res = await getItemAsync("authToken");
-    if (res) {
-      const parsedUser = JSON.parse(res);
-      parsedUser.user.DOB = date;
-      parsedUser.user.country = selectedCountry?.name;
-      parsedUser.user.phone = phoneNumber;
-
-      setDate(parsedUser.user.DOB);
-      setCurrentCountry(parsedUser.user.country);
-      setPhoneNumber(parsedUser.user.phone);
-
-      await setItemAsync("authToken", JSON.stringify(parsedUser));
+    if (userUpdate?.success) {
+      showAlert(
+        "Successful",
+        userUpdate?.message,
+        [{ onPress: () => {}, text: "Close" }],
+        "success"
+      );
     }
 
-    showAlert(
-      "Successfull",
-      userUpdate?.message,
-      [{ onPress: () => {}, text: "Close" }],
-      "success"
-    );
     setLoading(false);
   };
 
@@ -367,7 +353,7 @@ const EditProfile = () => {
               </View>
             </View>
 
-            <View>
+            {/* <View>
               <Text
                 style={{
                   fontWeight: 400,
@@ -403,7 +389,7 @@ const EditProfile = () => {
                   Delete Account
                 </Text>
               </Pressable>
-            </View>
+            </View> */}
           </View>
         </View>
       </ScrollView>

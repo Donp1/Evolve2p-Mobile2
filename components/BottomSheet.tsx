@@ -30,7 +30,6 @@ const BottomSheet = ({ visible, setVisible, children, height }: Props) => {
             style={{
               height: height ? `${height}%` : "50%",
               backgroundColor: "#222222",
-              paddingHorizontal: 20,
               paddingTop: 10,
               width: "100%",
             }}

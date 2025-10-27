@@ -15,35 +15,19 @@ SplashScreen.hide();
 export default function RootLayoutNav() {
   const queryClient = new QueryClient();
 
-  const [token, setToken] = useState<string | null>(null);
-  const [expired, setExpired] = useState<boolean>(false);
-
+ 
+  
   useEffect(() => {
     (async () => {
-      try {
-        const authToken = await getItemAsync("authToken");
-        if (authToken) {
-          const res = await checkToken(JSON.parse(authToken).token);
-          if (res?.error) {
-            setExpired(true);
-            return;
-          }
-          if (res?.success) {
-            setExpired(false);
-            setToken(authToken);
-          }
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    })();
-  }, [token]);
+      const authToken = await getItemAsync("authToken");
 
-  useEffect(() => {
-    if (token && !expired) {
-      router.replace("/(authentication)/securityPin");
-    }
-  }, [token]);
+       if (authToken){
+         router.replace("/(authentication)/securityPin");
+       }
+        
+    })();
+  }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>

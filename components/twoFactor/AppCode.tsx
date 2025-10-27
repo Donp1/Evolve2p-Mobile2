@@ -100,7 +100,7 @@ const AppCode = ({ setSelectedRoute }: pageProps) => {
           ></Text>
         </Pressable>
       </View>
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ flex: 1 }}>
         <View style={styles.content}>
           {AlertComponent}
           <Text
@@ -124,7 +124,7 @@ const AppCode = ({ setSelectedRoute }: pageProps) => {
             Enter the code from your security app to complete setup.
           </Text>
 
-          <View style={{ marginTop: vs(20) }}>
+          <View style={{ marginTop: vs(20), gap: 20 }}>
             <CustomeOtp
               secureTextEntry={false}
               handleOtp={handleOtp}
@@ -152,7 +152,8 @@ export default AppCode;
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    marginTop: vs(20),
+    paddingVertical: vs(20),
     paddingHorizontal: s(20),
+    backgroundColor: colors.primary,
   },
 });

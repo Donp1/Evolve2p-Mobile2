@@ -1,22 +1,23 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { Image } from "expo-image";
 import { colors } from "@/constants";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import TotalBalance from "./Balance";
 import { ms } from "react-native-size-matters";
 import { useUserStore } from "@/store/userStore";
-import PreferedCurrency, {
-  SelectedCurrency,
-} from "@/components/PreferedCurrency";
+import PreferedCurrency, { SelectedCurrency } from "@/components/PreferedCurrency";
+
+interface Wallet {
+  balance: number | string;
+  currency: string;
+}
 
 interface PageProps {
   lockCurrency: boolean;
   setLockCurrency: Dispatch<SetStateAction<boolean>>;
   setPreferedCoinVisible: Dispatch<SetStateAction<boolean>>;
-  setSelectedCurrency: Dispatch<
-    SetStateAction<SelectedCurrency | null | undefined>
-  >;
+  setSelectedCurrency: Dispatch<SetStateAction<SelectedCurrency | null | undefined>>;
   selectedCurrency: SelectedCurrency | null | undefined;
   preferedCoinVisible: boolean;
   refreshing?: boolean;
@@ -32,60 +33,36 @@ const BalanceViewer = ({
   refreshing,
 }: PageProps) => {
   const user = useUserStore((state: any) => state.user);
-  const [myBalances, setMyBalances] = useState<
-    { crypto: string; amount: number }[]
-  >([]);
 
-  useEffect(() => {
-    (async () => {
-      if (!user || !selectedCurrency) return;
-
-      const balances = user?.wallets?.map((w: any) => ({
-        amount: Number(w?.balance),
-        crypto: String(w?.currency).toUpperCase(),
+  // Safer derived balances (only recomputes when user or selectedCurrency changes)
+  const myBalances = useMemo(() => {
+    if (!user?.wallets || !selectedCurrency) return [];
+    return user.wallets
+      .filter((w: Wallet) => w?.currency)
+      .map((w: Wallet) => ({
+        amount: Number(w.balance) || 0,
+        crypto: String(w.currency).toUpperCase(),
       }));
+  }, [user?.wallets, selectedCurrency]);
 
-      setMyBalances(balances);
-    })();
-  }, [user, selectedCurrency]);
   return (
     <>
       <View style={styles.balance}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text
-            style={{
-              fontWeight: 400,
-              fontSize: ms(16),
-              color: colors.gray3,
-            }}
-          >
-            Available Balance
-          </Text>
-          <Pressable style={{}} onPress={() => setLockCurrency((c) => !c)}>
-            {lockCurrency ? (
-              <Feather
-                name="eye-off"
-                size={ms(16)}
-                color={colors.secondary}
-                style={{ marginLeft: 10 }}
-              />
-            ) : (
-              <Feather
-                name="eye"
-                size={ms(16)}
-                color={colors.secondary}
-                style={{ marginLeft: 10 }}
-              />
-            )}
+        {/* Label + Toggle Visibility */}
+        <View style={styles.row}>
+          <Text style={styles.label}>Available Balance</Text>
+          <Pressable onPress={() => setLockCurrency((c) => !c)} hitSlop={8}>
+            <Feather
+              name={lockCurrency ? "eye-off" : "eye"}
+              size={ms(16)}
+              color={colors.secondary}
+              style={styles.eyeIcon}
+            />
           </Pressable>
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+
+        {/* Total Balance + Currency Selector */}
+        <View style={styles.rowBetween}>
           <TotalBalance
             lockCurrency={lockCurrency}
             currency={selectedCurrency}
@@ -94,32 +71,17 @@ const BalanceViewer = ({
           />
           <Pressable
             onPress={() => setPreferedCoinVisible((c) => !c)}
-            style={{
-              backgroundColor: colors.gray2,
-              paddingVertical: 8,
-              paddingHorizontal: 10,
-              borderRadius: 100,
-              gap: 8,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            style={styles.currencyButton}
+            hitSlop={6}
           >
-            <Image
-              source={{
-                uri: selectedCurrency?.flag,
-              }}
-              style={{ width: 20, height: 20, borderRadius: 10 }}
-            />
-
-            <Text
-              style={{
-                fontWeight: 700,
-                fontSize: ms(14),
-                color: colors.secondary,
-              }}
-            >
-              {selectedCurrency?.code.toUpperCase()}
+            {selectedCurrency?.flag && (
+              <Image
+                source={{ uri: selectedCurrency.flag }}
+                style={styles.flag}
+              />
+            )}
+            <Text style={styles.currencyText}>
+              {selectedCurrency?.code?.toUpperCase() ?? "--"}
             </Text>
             <FontAwesome
               name="chevron-down"
@@ -129,6 +91,8 @@ const BalanceViewer = ({
           </Pressable>
         </View>
       </View>
+
+      {/* Modal for currency selection */}
       <PreferedCurrency
         visible={preferedCoinVisible}
         onSelect={setSelectedCurrency}
@@ -143,11 +107,48 @@ export default BalanceViewer;
 const styles = StyleSheet.create({
   balance: {
     paddingVertical: 24,
-    // paddingHorizontal: 20,
     borderTopWidth: 1,
     borderTopColor: colors.gray2,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray2,
     marginVertical: 20,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  label: {
+    fontWeight: "400",
+    fontSize: ms(16),
+    color: colors.gray3,
+  },
+  eyeIcon: {
+    marginLeft: 10,
+  },
+  currencyButton: {
+    backgroundColor: colors.gray2,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 100,
+    gap: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  flag: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  currencyText: {
+    fontWeight: "700",
+    fontSize: ms(14),
+    color: colors.secondary,
   },
 });

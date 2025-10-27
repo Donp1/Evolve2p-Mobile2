@@ -225,7 +225,7 @@ const Prifile = () => {
             }
           />
 
-          <ContentBox
+          {/* <ContentBox
             onPress={() => router.push("/notification")}
             text="Notification"
             icon={
@@ -235,7 +235,8 @@ const Prifile = () => {
                 color={colors.accent}
               />
             }
-          />
+          /> */}
+
           <ContentBox
             onPress={() => router.push("/transaction-limit")}
             text="Transaction Limits"
@@ -359,7 +360,7 @@ const Prifile = () => {
             text="App Language"
             onPress={() => router.push("/language")}
           />
-          <ContentBox
+          {/* <ContentBox
             icon={
               <Image
                 source={require("@/assets/images/dark-mode.png")}
@@ -369,7 +370,7 @@ const Prifile = () => {
             }
             text="Dark mode"
             onPress={() => {}}
-          />
+          /> */}
           <ContentBox
             icon={
               <Image

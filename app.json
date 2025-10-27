@@ -4,22 +4,20 @@
     "slug": "Evolve2p",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Logo.png",
+    "icon": "./assets/images/app-icon.jpg",
     "scheme": "evolve2p",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/Logo.png",
+      "image": "./assets/images/Logo2.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true,
-      "icon": "./assets/images/Logo.png"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/Logo.png",
         "backgroundColor": "#000000",
         "googleServicesFile": "./android/app/google-services.json",
         "useNextNotificationsApi": true
@@ -48,7 +46,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

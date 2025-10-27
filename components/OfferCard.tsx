@@ -1,14 +1,11 @@
 import { Offer } from "@/hooks/useOffers";
-import { formatNumber, priceFormater } from "@/utils/countryStore";
 import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
 } from "react-native";
-import CryptoPriceWithMargin from "./CryptoPriceWithMargin ";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
 import TraderProfile from "./TraderProfile";
@@ -31,53 +28,66 @@ interface OfferCardProps {
   isUserDetails?: boolean;
 }
 
+const cryptoMap: Record<string, string> = {
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  USDT: "tether",
+  USDC: "usd-coin",
+};
+
+// reusable fetch with retry
+async function fetchWithRetry(url: string, retries = 3, delay = 1000) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      if (attempt === retries - 1) throw err;
+      await new Promise((res) => setTimeout(res, delay * (attempt + 1))); // exponential backoff
+    }
+  }
+}
+
 const OfferCard: React.FC<OfferCardProps> = ({
   offer,
   onAction,
   isUserDetails,
 }) => {
   const actionLabel = offer.type.toLowerCase() === "sell" ? "Buy" : "Sell";
-  const isBuyAction = actionLabel === "Buy";
 
-  const [loading, setLoading] = useState(false);
   const [basePrice, setBasePrice] = useState<number | null>(null);
-
   const [showTradeProfile, setShowTradeProfile] = useState(false);
 
   useEffect(() => {
     if (!offer.crypto) return;
 
-    const fetchPrice = async () => {
+    let isMounted = true;
+
+    (async () => {
       try {
-        setLoading(true);
-        const res = await fetch(
+        const data = await fetchWithRetry(
           "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd"
         );
-        const data = await res.json();
 
-        const cryptoMap = {
-          BTC: "bitcoin",
-          ETH: "ethereum",
-          USDT: "tether",
-          USDC: "usd-coin",
-        };
-
-        const cryptoId =
-          cryptoMap[offer.crypto.toUpperCase() as keyof typeof cryptoMap];
-        if (!cryptoId || !data[cryptoId]) {
-          throw new Error("Invalid coin symbol or missing data.");
+        const cryptoId = cryptoMap[offer.crypto.toUpperCase()];
+        if (cryptoId && data[cryptoId]?.usd && isMounted) {
+          setBasePrice(data[cryptoId].usd);
         }
-
-        setBasePrice(data[cryptoId].usd);
       } catch (err) {
-        console.error("Error fetching crypto price:", err);
-        setBasePrice(null);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch crypto price:", err);
+        if (isMounted) setBasePrice(null);
       }
-    };
+    })();
 
-    fetchPrice();
+    return () => {
+      isMounted = false;
+    };
   }, [offer.crypto]);
 
   const adjustedPrice =
@@ -97,25 +107,11 @@ const OfferCard: React.FC<OfferCardProps> = ({
             style={styles.header}
           >
             <View style={styles.icon}>
-              <Text
-                style={{
-                  fontSize: ms(14),
-                  fontWeight: "500",
-                  color: colors.gray4,
-                }}
-              >
+              <Text style={styles.iconText}>
                 {getInitials(offer?.user?.username)}
               </Text>
             </View>
-            <Text
-              style={{
-                fontSize: ms(14),
-                fontWeight: "500",
-                color: colors.white2,
-              }}
-            >
-              {offer?.user?.username}
-            </Text>
+            <Text style={styles.username}>{offer?.user?.username}</Text>
           </Pressable>
         )}
 
@@ -145,7 +141,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#fff",
+    shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -162,75 +158,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-  typeBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: "600",
-    overflow: "hidden",
-  },
-  buyBadge: {
-    backgroundColor: "rgba(34,197,94,0.2)",
-    color: "#4ade80",
-  },
-  sellBadge: {
-    backgroundColor: "rgba(239,68,68,0.2)",
-    color: "#f87171",
-  },
-  details: {
-    marginBottom: 12,
-  },
-  subText: {
-    color: "#9ca3af",
-    fontSize: 13,
-  },
-  marginText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#fff",
-    marginTop: 4,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 6,
-  },
-  label: {
-    fontSize: 11,
-    color: "#9ca3af",
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#e5e7eb",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 14,
-  },
-  footerText: {
-    fontSize: 11,
-    color: "#6b7280",
-  },
-  actionButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  buyBtn: {
-    backgroundColor: "#22c55e",
-  },
-  sellBtn: {
-    backgroundColor: "#ef4444",
-  },
-  actionText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "600",
-  },
   icon: {
     backgroundColor: "#4A4A4A",
     width: ms(35),
@@ -238,5 +165,10 @@ const styles = StyleSheet.create({
     borderRadius: ms(35) / 2,
     alignItems: "center",
     justifyContent: "center",
+  },
+  iconText: {
+    fontSize: ms(14),
+    fontWeight: "500",
+    color: colors.gray4,
   },
 });

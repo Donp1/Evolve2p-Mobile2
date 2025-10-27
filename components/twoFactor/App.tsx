@@ -59,6 +59,7 @@ const App = ({
 
         const updated = await updateUser({
           authType: "app",
+          is2faEnabled: true,
         });
         if (updated.error) {
           console.log(updated.message);
@@ -168,10 +169,14 @@ const App = ({
                       fontWeight: 500,
                       fontSize: ms(12),
                       color:
-                        user?.authType == "app" ? colors.accent : "#66B9FF",
+                        user?.authType == "app" && user?.is2faEnabled
+                          ? colors.accent
+                          : "#66B9FF",
                     }}
                   >
-                    {user?.authType == "app" ? "Enabled" : "Recommended"}
+                    {user?.authType == "app" && user?.is2faEnabled
+                      ? "Enabled"
+                      : "Recommended"}
                   </Text>
                 </View>
               </View>
@@ -198,10 +203,11 @@ const App = ({
             style={[
               globalStyles.btn,
               { width: "100%" },
-              user?.authType == "app" && {
-                opacity: 0.5,
-                backgroundColor: colors.gray,
-              },
+              user?.authType == "app" &&
+                user?.is2faEnabled && {
+                  opacity: 0.5,
+                  backgroundColor: colors.gray,
+                },
             ]}
           >
             {loading ? (
@@ -210,7 +216,8 @@ const App = ({
               <Text
                 style={[
                   globalStyles.btnText,
-                  user?.authType == "app" && { color: colors.white },
+                  user?.authType == "app" &&
+                    user?.is2faEnabled && { color: colors.white },
                 ]}
               >
                 Change 2FA Method
@@ -228,7 +235,8 @@ export default App;
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    marginTop: vs(20),
+    paddingTop: vs(20),
     paddingHorizontal: s(20),
+    backgroundColor: colors.primary,
   },
 });

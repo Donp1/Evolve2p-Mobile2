@@ -1,5 +1,12 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import React, { act, useEffect, useState } from "react";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import React, { act, useCallback, useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { globalStyles } from "@/utils/globalStyles";
@@ -80,6 +87,7 @@ const Wallet = () => {
 
   const [cryptoAction, setCryptoAction] = useState("");
   const [isCryptoBoxVisible, setIsCryptoBoxVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [actions, setActions] = useState<any[]>([]);
 
@@ -101,6 +109,12 @@ const Wallet = () => {
     setActions(recentActions);
     // console.log(user?.swaps);
   }, [user]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchCoins(); // just refetch data instead of full reload
+    setRefreshing(false);
+  }, [fetchCoins]);
 
   const handleSendCrypto = () => {
     if (!user?.kycVerified) {
@@ -174,6 +188,9 @@ const Wallet = () => {
           paddingBottom: 100,
           backgroundColor: colors.primary,
         }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <View style={{ flex: 1, paddingHorizontal: 10 }}>
           {!user?.kycVerified && (
@@ -216,6 +233,7 @@ const Wallet = () => {
             setPreferedCoinVisible={setPreferedCoinVisible}
             preferedCoinVisible={preferedCoinVisible}
             setSelectedCurrency={setSelectedCurrency}
+            refreshing={refreshing}
           />
 
           <View
@@ -516,7 +534,7 @@ const Wallet = () => {
                           }}
                         >
                           <AntDesign
-                            name="checkcircle"
+                            name="check-circle"
                             size={11}
                             color="#1ECB84"
                           />
@@ -620,73 +638,75 @@ const Wallet = () => {
         visible={isCryptoBoxVisible}
         height={60}
       >
-        <Text
-          style={{
-            fontWeight: 500,
-            fontSize: ms(16),
-            lineHeight: 28,
-            color: colors.white,
-            marginTop: 20,
-          }}
-        >
-          {cryptoAction != "" && cryptoAction == "Send"
-            ? "Select Cryptocurrency to Send"
-            : "Select Cryptocurrency to Receive"}
-        </Text>
+        <View style={{ flex: 1, paddingHorizontal: 10 }}>
+          <Text
+            style={{
+              fontWeight: 500,
+              fontSize: ms(16),
+              lineHeight: 28,
+              color: colors.white,
+              marginTop: 20,
+            }}
+          >
+            {cryptoAction != "" && cryptoAction == "Send"
+              ? "Select Cryptocurrency to Send"
+              : "Select Cryptocurrency to Receive"}
+          </Text>
 
-        <View style={{ marginTop: 20, gap: 10 }}>
-          {coins.map((coin, index) => (
-            <Pressable
-              onPress={() => {
-                setIsCryptoBoxVisible(false);
-                if (cryptoAction == "Receive") {
-                  router.push({
-                    pathname: "/receive-crypto",
-                    params: { coin: coin.symbol.toUpperCase() },
-                  });
-                } else if (cryptoAction == "Send") {
-                  router.push({
-                    pathname: "/send-crypto",
-                    params: { coin: coin.symbol.toUpperCase() },
-                  });
-                }
-              }}
-              key={index}
-              style={styles.coinContainer}
-            >
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
+          <View style={{ marginTop: 20, gap: 10 }}>
+            {coins.map((coin, index) => (
+              <Pressable
+                onPress={() => {
+                  setIsCryptoBoxVisible(false);
+                  if (cryptoAction == "Receive") {
+                    router.push({
+                      pathname: "/receive-crypto",
+                      params: { coin: coin.symbol.toUpperCase() },
+                    });
+                  } else if (cryptoAction == "Send") {
+                    router.push({
+                      pathname: "/send-crypto",
+                      params: { coin: coin.symbol.toUpperCase() },
+                    });
+                  }
                 }}
+                key={index}
+                style={styles.coinContainer}
               >
-                <Image
-                  source={{ uri: coin.image }}
-                  style={{ width: ms(30), height: ms(30) }}
-                  contentFit="contain"
-                  transition={1000}
-                />
-                <View>
-                  <Text
-                    style={{
-                      color: colors.white2,
-                      fontSize: ms(14),
-                      fontWeight: 700,
-                    }}
-                  >
-                    {cryptoAction} {coin.name}
-                  </Text>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <Image
+                    source={{ uri: coin.image }}
+                    style={{ width: ms(30), height: ms(30) }}
+                    contentFit="contain"
+                    transition={1000}
+                  />
+                  <View>
+                    <Text
+                      style={{
+                        color: colors.white2,
+                        fontSize: ms(14),
+                        fontWeight: 700,
+                      }}
+                    >
+                      {cryptoAction} {coin.name}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <FontAwesome
-                name="chevron-right"
-                size={ms(16)}
-                color={colors.white}
-              />
-            </Pressable>
-          ))}
+                <FontAwesome
+                  name="chevron-right"
+                  size={ms(16)}
+                  color={colors.white}
+                />
+              </Pressable>
+            ))}
+          </View>
         </View>
       </BottomSheet>
     </SafeAreaView>

@@ -178,7 +178,8 @@ export default SMS;
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    marginTop: vs(20),
+    paddingTop: vs(20),
     paddingHorizontal: s(20),
+    backgroundColor: colors.primary,
   },
 });

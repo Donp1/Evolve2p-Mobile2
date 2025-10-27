@@ -23,7 +23,7 @@ import { useAlert } from "@/components/AlertService";
 import { checkEmailExist, sendOtp } from "@/utils/countryStore";
 import Spinner from "@/components/Spinner";
 
-const ResetPassword = () => {
+export default function ResetPassword(){
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -169,6 +169,5 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
 
 const styles = StyleSheet.create({});

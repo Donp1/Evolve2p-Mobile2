@@ -1,5 +1,5 @@
 import { CoinPrices } from "@/context";
-import { getItemAsync } from "expo-secure-store";
+import { deleteItemAsync, getItemAsync } from "expo-secure-store";
 import { useEffect, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { format, isToday, isYesterday } from "date-fns";
@@ -190,8 +190,7 @@ export const checkPin = async (pin: string) => {
     const userData = await checkToken(data?.token);
 
     if (userData?.error) {
-      console.log(userData?.message);
-      return;
+      return { error: true, message: "Token has expired" };
     }
     const res = await fetch(base_url + "/api/check-pin", {
       headers: {
@@ -1095,6 +1094,27 @@ export const getTrade = async (tradeId: string) => {
   }
   try {
     const res = await fetch(base_url + "/api/get-trade/" + tradeId, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + data?.token,
+      },
+
+      method: "GET",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getSettings = async () => {
+  const token = await getItemAsync("authToken");
+  let data;
+  if (token) {
+    data = JSON.parse(token);
+  }
+  try {
+    const res = await fetch(base_url + "/api/admin/settings", {
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + data?.token,

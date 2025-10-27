@@ -54,13 +54,16 @@ const Notifications = () => {
             Notifications
           </Text>
         </View>
-        <View style={styles.notiContainer}>
+        <Pressable
+          onPress={() => router.push("/profile")}
+          style={styles.notiContainer}
+        >
           <Fontisto
             name="player-settings"
             size={ms(17)}
             color={colors.secondary}
           />
-        </View>
+        </Pressable>
       </View>
 
       {notifications.length === 0 ? (

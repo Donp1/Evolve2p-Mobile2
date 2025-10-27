@@ -579,7 +579,7 @@ const StepThree = ({
         </View>
 
         {/* read guide */}
-        <Pressable
+        {/* <Pressable
           style={{
             marginTop: 20,
             flexDirection: "row",
@@ -598,7 +598,7 @@ const StepThree = ({
           >
             Read our guide for creating crypto
           </Text>
-        </Pressable>
+        </Pressable> */}
         {/* end of read guide */}
       </View>
 

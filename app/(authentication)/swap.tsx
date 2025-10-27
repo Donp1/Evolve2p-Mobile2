@@ -30,6 +30,7 @@ import {
 } from "@/utils/countryStore";
 import Spinner from "@/components/Spinner";
 import { useAlert } from "@/components/AlertService";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const Swap = () => {
   const goBack = () => {
@@ -90,6 +91,30 @@ const Swap = () => {
       );
       return;
     }
+
+    if (!user?.is2faEnabled) {
+      showAlert(
+        "Not set 2FA",
+        "Two-Factor Authentication (2FA) is required before performing this action. Please enable 2FA in your account settings.",
+        [
+          {
+            text: "Set Now",
+            onPress() {
+              router.push("/(authentication)/two-factor-auth");
+            },
+            style: { backgroundColor: colors.accent },
+            textStyle: { color: colors.primary },
+          },
+          {
+            text: "Close",
+            onPress() {},
+          },
+        ],
+        "error"
+      );
+      return;
+    }
+
     setSwapBottomSheet(true);
   };
 
@@ -296,12 +321,14 @@ const Swap = () => {
             <Spinner height={40} width={40} />
           </View>
         ) : (
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={{
-              flex: 1,
+              flexGrow: 1,
               backgroundColor: colors.primary,
               paddingHorizontal: 10,
             }}
+            enableOnAndroid
+            extraScrollHeight={20}
           >
             <View
               style={[globalStyles.sectionBox, { backgroundColor: "#222222" }]}
@@ -813,7 +840,7 @@ const Swap = () => {
                 <Text style={globalStyles.btnText}>Swap Now</Text>
               </Pressable>
             </View>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         )}
       </SafeAreaView>
 

@@ -246,7 +246,7 @@ const StepTwo = ({
               paddingEnd: 16,
             }}
           >
-            <AntDesign name="exclamationcircle" size={15} color="#FFC051" />
+            <AntDesign name="exclamation-circle" size={15} color="#FFC051" />
             <View>
               <Text
                 style={{
@@ -516,7 +516,7 @@ const StepTwo = ({
               paddingEnd: 16,
             }}
           >
-            <AntDesign name="exclamationcircle" size={15} color="#FE857D" />
+            <AntDesign name="exclamation-circle" size={15} color="#FE857D" />
             <View>
               <Text
                 style={{
@@ -542,7 +542,7 @@ const StepTwo = ({
               paddingEnd: 16,
             }}
           >
-            <AntDesign name="exclamationcircle" size={15} color="#FE857D" />
+            <AntDesign name="exclamation-circle" size={15} color="#FE857D" />
             <View>
               <Text
                 style={{
@@ -708,7 +708,7 @@ const StepTwo = ({
       </View>
 
       {/* read guide */}
-      <Pressable
+      {/* <Pressable
         style={{
           marginTop: 20,
           flexDirection: "row",
@@ -727,7 +727,7 @@ const StepTwo = ({
         >
           Read our guide for creating crypto
         </Text>
-      </Pressable>
+      </Pressable> */}
       {/* end of read guide */}
 
       {/* submit button */}

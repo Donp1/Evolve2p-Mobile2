@@ -1,164 +1,116 @@
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   Dimensions,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
+  ScrollView,
 } from "react-native";
-import React, { useEffect, useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { colors } from "@/constants";
-import { Entypo, EvilIcons, Ionicons } from "@expo/vector-icons";
+import { EvilIcons, Ionicons } from "@expo/vector-icons";
 import { ms, s } from "react-native-size-matters";
-import { Link, router } from "expo-router";
-import BottomSheet from "./BottomSheet";
-import { globalStyles } from "@/utils/globalStyles";
-import { useCoinStore } from "@/context";
+import { router } from "expo-router";
 import { priceFormater } from "@/utils/countryStore";
-import { Image } from "expo-image";
-import TradeStatus from "./TradeStatus";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
 const { width } = Dimensions.get("window");
 
-interface Country {
-  cca2: string;
-  flags: { png: string };
-  currencies?: {
-    [code: string]: { name: string; symbol: string };
-  };
-}
-
-interface SelectedCurrency {
-  code: string;
-  name: string;
-  symbol: string;
-  flag: string;
-}
-
 const NewTrade = () => {
   const user = useUserStore((state) => state.user);
-  const [currentTrades, setCurrentTrades] = useState<any[]>(
-    user?.tradesAsSeller
-  );
+  const [currentTrades, setCurrentTrades] = useState<any[]>([]);
 
-  const socket = io("https://evolve2p-backend.onrender.com", {
-    query: { userId: user?.id },
-  });
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    setCurrentTrades(
-      user?.tradesAsSeller?.filter((trade: any) => trade.status == "PENDING") ||
-        []
-    );
-  }, [user?.tradesAsSeller]);
+    if (!user?.id) return;
 
-  useEffect(() => {
+    if (!socketRef.current) {
+      socketRef.current = io("https://evolve2p-backend.onrender.com", {
+        query: { userId: user.id },
+        transports: ["websocket"],
+      });
+    }
+
+    const socket = socketRef.current;
+
     const handleNewMessage = (msg: any) => {
-      setCurrentTrades((prev: any) => [msg, ...prev]);
+      setCurrentTrades((prev) => [msg, ...prev]);
     };
 
     socket.on("new_trade", handleNewMessage);
 
     return () => {
       socket.off("new_trade", handleNewMessage);
+      socket.disconnect();
+      socketRef.current = null;
     };
-  }, []); // 👈 empty dependency array means this runs once
+  }, [user?.id]);
+
+  const tradesToShow = useMemo(() => {
+    return (
+      user?.tradesAsSeller
+        ?.filter((trade: any) => trade?.status === "PENDING")
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ) || []
+    );
+  }, [user?.tradesAsSeller]);
+
+  useEffect(() => {
+    setCurrentTrades(tradesToShow);
+  }, [tradesToShow]);
+
+  if (currentTrades.length === 0) return null;
+
   return (
-    <>
-      <ScrollView
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        horizontal
-        style={{ width: width }} // 👈 take full height
-      >
-        {currentTrades.length > 0 &&
-          [...currentTrades]
-            .sort(
-              (a: any, b: any) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-            )
-            .filter((trade: any) => trade?.status === "PENDING") // filter only PENDING
-            .map((trade: any) => (
-              <View key={trade.id} style={styles.page}>
-                <View style={styles.container}>
-                  <View style={styles.top}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <View
-                        style={[
-                          styles.iconContainer,
-                          { backgroundColor: "#002E52" },
-                        ]}
-                      >
-                        <Ionicons
-                          name="notifications"
-                          size={15}
-                          color={"#4DAAF2"}
-                        />
-                      </View>
-
-                      <Text
-                        style={{
-                          color: "#33A2FF",
-                          fontWeight: "500",
-                          fontSize: ms(14),
-                        }}
-                      >
-                        New trade request
-                      </Text>
-                    </View>
-                    <View style={[styles.iconContainer]}>
-                      <EvilIcons
-                        name="close"
-                        size={15}
-                        style={{ color: colors.secondary }}
-                      />
-                    </View>
-                  </View>
-
-                  <Text
-                    style={{
-                      alignSelf: "center",
-                      marginLeft: 30,
-                      lineHeight: 18,
-                      color: colors.secondary,
-                      fontWeight: 700,
-                      fontSize: ms(12),
-                    }}
-                  >
-                    @{trade?.buyer?.username} wants to buy{" "}
-                    {priceFormater(trade?.amountFiat)} {trade?.offer?.currency}{" "}
-                    ({trade?.amountCrypto} {trade?.offer?.crypto}) from your Ad.
-                  </Text>
-
-                  <Pressable
-                    onPress={() => {
-                      router.push(`/process-trade/${trade?.id}`);
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: colors.accent,
-                        marginHorizontal: 30,
-                        marginTop: 10,
-                      }}
-                    >
-                      View Request
-                    </Text>
-                  </Pressable>
+    <ScrollView
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      style={{ width }}
+    >
+      {currentTrades.map((trade) => (
+        <View style={styles.page} key={trade.id}>
+          <View style={styles.container}>
+            {/* Top Row */}
+            <View style={styles.top}>
+              <View style={styles.topLeft}>
+                <View
+                  style={[styles.iconContainer, { backgroundColor: "#002E52" }]}
+                >
+                  <Ionicons name="notifications" size={15} color={"#4DAAF2"} />
                 </View>
+                <Text style={styles.newTradeText}>New trade request</Text>
               </View>
-            ))}
-      </ScrollView>
-    </>
+
+              <View style={styles.iconContainer}>
+                <EvilIcons
+                  name="close"
+                  size={15}
+                  style={{ color: colors.secondary }}
+                />
+              </View>
+            </View>
+
+            {/* Message */}
+            <Text style={styles.tradeText}>
+              @{trade?.buyer?.username ?? "Unknown"} wants to buy{" "}
+              {priceFormater(trade?.amountFiat || 0)}{" "}
+              {trade?.offer?.currency ?? ""} ({trade?.amountCrypto ?? 0}{" "}
+              {trade?.offer?.crypto ?? ""}) from your Ad.
+            </Text>
+
+            {/* Action */}
+            <Pressable onPress={() => router.push(`/process-trade/${trade?.id}`)}>
+              <Text style={styles.viewRequest}>View Request</Text>
+            </Pressable>
+          </View>
+        </View>
+      ))}
+    </ScrollView>
   );
 };
 
@@ -166,7 +118,7 @@ export default NewTrade;
 
 const styles = StyleSheet.create({
   page: {
-    width: width, // 👈 force each page to full screen width
+    width,
     flex: 1,
   },
   container: {
@@ -185,6 +137,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
   },
+  topLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -192,5 +149,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray,
     width: 25,
     height: 25,
+  },
+  newTradeText: {
+    color: "#33A2FF",
+    fontWeight: "500",
+    fontSize: ms(14),
+  },
+  tradeText: {
+    alignSelf: "center",
+    marginLeft: 30,
+    lineHeight: 18,
+    color: colors.secondary,
+    fontWeight: "700",
+    fontSize: ms(12),
+  },
+  viewRequest: {
+    color: colors.accent,
+    marginHorizontal: 30,
+    marginTop: 10,
   },
 });

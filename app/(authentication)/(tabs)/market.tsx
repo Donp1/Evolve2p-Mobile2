@@ -1,194 +1,137 @@
+import React, { useState, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  FlatList,
+  RefreshControl,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { globalStyles } from "@/utils/globalStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@/constants";
 import { ms, s } from "react-native-size-matters";
 import {
   AntDesign,
   Entypo,
   FontAwesome,
   FontAwesome5,
-  Fontisto,
   Ionicons,
-  MaterialIcons,
 } from "@expo/vector-icons";
-import { useCoinStore } from "@/context";
-import BottomSheet from "@/components/BottomSheet";
 import { Image } from "expo-image";
-import { createTrade, truncateText } from "@/utils/countryStore";
+import { router } from "expo-router";
+
+import { globalStyles } from "@/utils/globalStyles";
+import { colors } from "@/constants";
+import { truncateText } from "@/utils/countryStore";
+import { useCoinStore } from "@/context";
+import { useOffers } from "@/hooks/useOffers";
+
+import NotificationView from "@/components/NotificationView";
+import OfferCard from "@/components/OfferCard";
+import CoinBottomSheet from "@/components/CoinBottomSheet";
 import PaymentMethodSelector, {
   PaymentMethod,
 } from "@/components/SelectPaymentMethod";
-import CoinBottomSheet from "@/components/CoinBottomSheet";
 import PreferedCurrency, {
   SelectedCurrency,
 } from "@/components/PreferedCurrency";
-import PaymentMethodForm from "@/components/PaymentMethodForm";
-import OfferLimitsSection from "@/components/margingOfferLimits";
-import { router } from "expo-router";
-import { Offer, useOffers } from "@/hooks/useOffers";
-import OfferCard, { ActionableOffer } from "@/components/OfferCard";
-import TraderProfile from "@/components/TraderProfile";
-import NotificationView from "@/components/NotificationView";
 
 const Market = () => {
   const coins = useCoinStore((state) => state.coins);
 
-  const [section, setSection] = useState("buy");
+  const [section, setSection] = useState<"buy" | "sell">("buy");
   const [topFilterCoin, setTopFilterCoin] = useState(false);
-  const [activeTopCoin, setActiveTopCoin] = useState(coins[0]);
+  const [activeTopCoin, setActiveTopCoin] = useState(coins[0] ?? null);
 
   const [preferedCoinVisible, setPreferedCoinVisible] = useState(false);
-  const [completeKycVisible, setCompleteKycVisible] = useState(false);
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCurrency, setSelectedCurrency] =
     useState<SelectedCurrency | null>(null);
-
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState(false);
   const [filterPayments, setFilterPayments] = useState<PaymentMethod[]>([]);
 
-  const {
-    offers,
-    loading: offerLoading,
-    error,
-  } = useOffers({
+  const { offers, loading: offerLoading } = useOffers({
     type: section,
     crypto: activeTopCoin?.symbol,
     paymentMethod: filterPayments.map((pm) => pm.id),
     currency: selectedCurrency?.code || "USD",
   });
 
-  const handleTrade = async (id: string) => {
-    router.push({
-      pathname: "/trade/[id]",
-      params: {
-        id: id,
-      },
-    });
-  };
+  const handleTrade = useCallback((id: string) => {
+    router.push({ pathname: "/trade/[id]", params: { id } });
+  }, []);
+
+  // ✅ useMemo avoids recalculating
+  const offerList = useMemo(() => offers?.data ?? [], [offers]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // simulate fetching data from API
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
   return (
-    <>
-      <SafeAreaView style={globalStyles.container}>
-        {/* topbar */}
-        <View
-          style={[
-            globalStyles.topBar,
-            { paddingHorizontal: 20, paddingVertical: 10 },
-          ]}
-        >
-          <Text
-            style={{
-              fontWeight: 500,
-              fontSize: ms(16),
-              color: colors.secondary,
-            }}
-          >
-            P2P Marketplace
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <View style={styles.notiContainer}>
-              <FontAwesome5
-                name="headset"
-                size={ms(17)}
-                color={colors.secondary}
-              />
-            </View>
-            <NotificationView />
+    <SafeAreaView style={globalStyles.container}>
+      {/* Top Bar */}
+      <View style={[globalStyles.topBar, styles.topBar]}>
+        <Text style={styles.topBarTitle}>P2P Marketplace</Text>
+        <View style={styles.topBarActions}>
+          <View style={styles.notiContainer}>
+            <FontAwesome5
+              name="headset"
+              size={ms(17)}
+              color={colors.secondary}
+            />
           </View>
+          <NotificationView />
         </View>
-        {/* end of topbar */}
+      </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: 100,
-            backgroundColor: colors.primary,
-            flexGrow: 1,
-            paddingHorizontal: 10,
-          }}
-        >
-          <View
-            style={[
-              globalStyles.sectionBox,
-              {
-                borderRadius: 0,
-                marginTop: 0,
-                paddingHorizontal: 0,
-                backgroundColor: colors.primary,
-                gap: 10,
-              },
-            ]}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
+      {/* Content */}
+      <FlatList
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#2196F3"]} // Android
+            tintColor="#2196F3" // iOS
+            title="Refreshing..."
+          />
+        }
+        style={{ padding: 10, backgroundColor: colors.primary }}
+        ListHeaderComponent={
+          <View style={styles.headerSection}>
+            {/* Buy/Sell toggle */}
+            <View style={styles.sectionRow}>
               <View style={styles.btnContainer}>
-                <Pressable
-                  onPress={() => setSection("buy")}
-                  style={[
-                    styles.btn,
-                    section == "buy" && { backgroundColor: colors.gray },
-                  ]}
-                >
-                  <Text
+                {(["buy", "sell"] as const).map((type) => (
+                  <Pressable
+                    key={type}
+                    onPress={() => setSection(type)}
                     style={[
-                      styles.btnText,
-                      section == "buy" && {
-                        fontWeight: 500,
-                        color: colors.white2,
-                      },
+                      styles.btn,
+                      section === type && { backgroundColor: colors.gray },
                     ]}
                   >
-                    Buy
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setSection("sell")}
-                  style={[
-                    styles.btn,
-                    section == "sell" && { backgroundColor: colors.gray },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.btnText,
-                      section == "sell" && {
-                        fontWeight: 500,
-                        color: colors.white2,
-                      },
-                    ]}
-                  >
-                    Sell
-                  </Text>
-                </Pressable>
+                    <Text
+                      style={[
+                        styles.btnText,
+                        section === type && {
+                          fontWeight: "500",
+                          color: colors.white2,
+                        },
+                      ]}
+                    >
+                      {type === "buy" ? "Buy" : "Sell"}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
 
-              <Pressable
-                // onPress={() => setCreateOfferBottomSheet(true)}
-                style={[
-                  styles.notiContainer,
-                  { flexDirection: "row", alignItems: "center", gap: 10 },
-                ]}
-              >
+              <Pressable style={[styles.notiContainer, styles.rowCenter]}>
                 <Ionicons
                   name="reload"
                   size={ms(17)}
@@ -197,39 +140,19 @@ const Market = () => {
               </Pressable>
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                gap: 10,
-                width: "100%",
-              }}
-            >
-              {/* coin filter */}
+            {/* Filters */}
+            <View style={styles.filtersRow}>
               <Pressable
                 onPress={() => setTopFilterCoin(true)}
                 style={[styles.topBox, { flex: 2 }]}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    // gap: 5,
-                    justifyContent: "space-between",
-                  }}
-                >
+                <View style={styles.rowBetween}>
                   <Image
-                    source={{ uri: activeTopCoin.image }}
-                    style={{ width: 16, height: 16 }}
+                    source={{ uri: activeTopCoin?.image ?? "" }}
+                    style={styles.coinIcon}
                   />
-                  <Text
-                    style={{
-                      fontWeight: 400,
-                      fontSize: ms(14),
-                      color: colors.secondary,
-                    }}
-                  >
-                    {activeTopCoin.symbol?.toUpperCase()}
+                  <Text style={styles.filterText}>
+                    {activeTopCoin?.symbol?.toUpperCase() ?? "Coin"}
                   </Text>
                   <Entypo
                     name="chevron-small-down"
@@ -239,27 +162,12 @@ const Market = () => {
                 </View>
               </Pressable>
 
-              {/* payment filter */}
               <Pressable
                 onPress={() => setPaymentMethodFilter(true)}
                 style={[styles.topBox, { flex: 2 }]}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    // gap: 5,
-                    justifyContent: "space-between",
-                    width: "100%",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontWeight: 400,
-                      fontSize: ms(14),
-                      color: colors.secondary,
-                    }}
-                  >
+                <View style={styles.rowBetween}>
+                  <Text style={styles.filterText}>
                     {truncateText("Payment method", 10)}
                   </Text>
                   <Entypo
@@ -277,59 +185,29 @@ const Market = () => {
                   color={colors.secondary}
                 />
               </Pressable>
-            </ScrollView>
+            </View>
 
-            <View
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 5,
-                borderWidth: 1,
-                borderColor: "#222",
-                // marginHorizontal: 20,
-                borderRadius: 10,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
+            {/* Amount Input */}
+            {/* <View style={styles.amountInputContainer}>
               <TextInput
-                style={{
-                  flex: 1,
-                  color: colors.secondary,
-                  fontSize: ms(14),
-                  fontWeight: 400,
-                }}
-                placeholder={`Enter ${selectedCurrency?.code} Amount`}
+                style={styles.amountInput}`
+                placeholder={`Enter ${selectedCurrency?.code ?? "USD"} Amount`}
                 placeholderTextColor={colors.secondary}
                 keyboardType="numeric"
+                inputMode="numeric"
               />
               <Pressable
                 onPress={() => setPreferedCoinVisible((c) => !c)}
-                style={{
-                  backgroundColor: colors.gray2,
-                  paddingVertical: 8,
-                  paddingHorizontal: 10,
-                  borderRadius: 100,
-                  gap: 8,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                style={styles.currencySelector}
               >
-                <Image
-                  source={{
-                    uri: selectedCurrency?.flag,
-                  }}
-                  style={{ width: 20, height: 20, borderRadius: 10 }}
-                />
-
-                <Text
-                  style={{
-                    fontWeight: 500,
-                    fontSize: ms(14),
-                    color: colors.secondary,
-                  }}
-                >
-                  {selectedCurrency?.code.toUpperCase()}
+                {selectedCurrency?.flag && (
+                  <Image
+                    source={{ uri: selectedCurrency.flag }}
+                    style={styles.flagIcon}
+                  />
+                )}
+                <Text style={styles.currencyCode}>
+                  {selectedCurrency?.code?.toUpperCase() ?? "USD"}
                 </Text>
                 <FontAwesome
                   name="chevron-down"
@@ -337,128 +215,78 @@ const Market = () => {
                   color={colors.secondary}
                 />
               </Pressable>
-            </View>
+            </View> */}
 
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 20,
-              }}
-            >
-              <Text
-                style={{
-                  fontWeight: 500,
-                  fontSize: ms(14),
-                  color: colors.secondary,
-                }}
-              >
-                Offer list
-              </Text>
+            {/* Offer List Header */}
+            <View style={styles.offerHeader}>
+              <Text style={styles.offerTitle}>Offer list</Text>
               <Pressable
                 onPress={() => router.push("/(authentication)/create-offer")}
-                style={{
-                  backgroundColor: colors.gray2,
-                  paddingVertical: 10,
-                  paddingHorizontal: 10,
-                  borderRadius: 100,
-                  gap: 8,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                style={styles.postAdBtn}
               >
-                <AntDesign name="pluscircle" size={17} color="#FFFA66" />
-                <Text
-                  style={{
-                    color: "#FFFA66",
-                    fontWeight: 700,
-                    fontSize: ms(14),
-                  }}
-                >
-                  Post an Ad
-                </Text>
+                <AntDesign name="plus-square" size={17} color="#FFFA66" />
+                <Text style={styles.postAdText}>Post an Ad</Text>
               </Pressable>
             </View>
           </View>
-
-          {offerLoading ? (
-            <View
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                marginTop: 20,
-              }}
-            >
+        }
+        data={offerList}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <OfferCard
+            onAction={handleTrade}
+            offer={item}
+            key={item.id}
+            isUserDetails
+          />
+        )}
+        ListEmptyComponent={
+          offerLoading ? (
+            <View style={styles.centered}>
               <ActivityIndicator color={colors.accent} size={40} />
             </View>
           ) : (
-            <>
-              {(offers?.data?.length ?? 0) <= 0 ? (
-                <View>
-                  <Text
-                    style={{
-                      marginTop: 20,
-                      textAlign: "center",
-                      color: colors.secondary,
-                      fontSize: ms(15),
-                      fontWeight: 500,
-                    }}
-                  >
-                    🚫 No offers available. Try changing your filters.
-                  </Text>
-                </View>
-              ) : (
-                <>
-                  {offers?.data?.map((offer) => (
-                    <OfferCard
-                      onAction={handleTrade}
-                      key={offer.id}
-                      offer={offer}
-                      isUserDetails={true}
-                    />
-                  ))}
-                </>
-              )}
-            </>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-      {/* coin */}
+            <Text style={styles.noOffersText}>
+              🚫 No offers available. Try changing your filters.
+            </Text>
+          )
+        }
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Modals */}
       <CoinBottomSheet
         setSelectedCoin={setActiveTopCoin}
         visible={topFilterCoin}
         height={60}
         setVisible={setTopFilterCoin}
       />
-
-      {/* payment */}
       <PaymentMethodSelector
         visible={paymentMethodFilter}
         onClose={() => setPaymentMethodFilter(false)}
-        onSave={(selected) => {
-          setFilterPayments(selected);
-        }}
+        onSave={setFilterPayments}
         mode="multiple"
       />
-
       <PreferedCurrency
         visible={preferedCoinVisible}
         onSelect={setSelectedCurrency}
         onClose={() => setPreferedCoinVisible(false)}
       />
-    </>
+    </SafeAreaView>
   );
 };
 
 export default Market;
 
 const styles = StyleSheet.create({
+  topBar: { paddingHorizontal: 20, paddingVertical: 10 },
+  topBarTitle: { fontWeight: "500", fontSize: ms(16), color: colors.secondary },
+  topBarActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   notiContainer: {
     width: 32,
     height: 32,
-    borderRadius: 32 / 2,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -469,8 +297,6 @@ const styles = StyleSheet.create({
     width: "40%",
     backgroundColor: colors.gray2,
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     overflow: "hidden",
   },
   btn: {
@@ -478,14 +304,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 5,
-    borderRadius: 100,
   },
-  btnText: {
-    color: colors.secondary,
-    fontWeight: 400,
-    fontSize: ms(16),
-    lineHeight: 24,
+  btnText: { color: colors.secondary, fontSize: ms(16), lineHeight: 24 },
+  headerSection: { gap: 10, backgroundColor: colors.primary },
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
+  filtersRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   topBox: {
     minWidth: s(100),
     backgroundColor: colors.gray2,
@@ -493,15 +320,67 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 100,
   },
-
-  coinContainer: {
+  filterText: { fontSize: ms(14), color: colors.secondary },
+  rowBetween: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: colors.gray2,
+  },
+  rowCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  coinIcon: { width: 16, height: 16 },
+  amountInputContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "#222",
     borderRadius: 10,
-    marginVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  amountInput: { flex: 1, color: colors.secondary, fontSize: ms(14) },
+  currencySelector: {
+    backgroundColor: colors.gray2,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 100,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  flagIcon: { width: 20, height: 20, borderRadius: 10 },
+  currencyCode: {
+    fontWeight: "500",
+    fontSize: ms(14),
+    color: colors.secondary,
+  },
+  offerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  offerTitle: { fontWeight: "500", fontSize: ms(14), color: colors.secondary },
+  postAdBtn: {
+    backgroundColor: colors.gray2,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 100,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  postAdText: { color: "#FFFA66", fontWeight: "700", fontSize: ms(14) },
+  centered: { alignItems: "center", justifyContent: "center", marginTop: 20 },
+  noOffersText: {
+    marginTop: 20,
+    textAlign: "center",
+    color: colors.secondary,
+    fontSize: ms(15),
+    fontWeight: "500",
   },
 });

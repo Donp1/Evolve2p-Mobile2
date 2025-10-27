@@ -47,8 +47,6 @@ const AuthLayout = () => {
     })();
   }, [user?.id]);
 
-  console.log(isPermissionGranted);
-
   // useEffect(() => {
   //   if (isPermissionGranted === false && !hasShownAlert.current) {
   //     hasShownAlert.current = true; // prevent showing again

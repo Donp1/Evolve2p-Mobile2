@@ -90,5 +90,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: s(20),
+    backgroundColor: colors.primary,
   },
 });

@@ -1,22 +1,24 @@
 import { colors } from "@/constants";
-import { FontAwesome } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import {
   View,
-  FlatList,
+  ScrollView,
   Image,
   Dimensions,
   Animated,
   StyleSheet,
   Text,
   Pressable,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   ImageSourcePropType,
 } from "react-native";
 import { ms } from "react-native-size-matters";
 import Entypo from "@expo/vector-icons/Entypo";
 
 const { width } = Dimensions.get("window");
-interface dataProps {
+
+interface DataProps {
   id: number;
   image: ImageSourcePropType | undefined;
   heading: string;
@@ -24,9 +26,9 @@ interface dataProps {
 }
 
 export default function StoryBox() {
-  const [data, setData] = useState<dataProps[]>([
+  const [data, setData] = useState<DataProps[]>([
     {
-      heading: " Increase Buy/Sell Limits",
+      heading: "Increase Buy/Sell Limits",
       description: "Unlock higher trading limits by upgrading verification.",
       id: 1,
       image: require("@/assets/images/type-limits.png"),
@@ -41,84 +43,54 @@ export default function StoryBox() {
   ]);
 
   const scrollX = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+    { useNativeDriver: false }
+  );
 
   const handleClose = (id: number) => {
-    setData((prev) =>
-      prev.filter((item) => {
-        console.log(item.id, id, item.id !== id);
-        return item.id !== id;
-      })
-    );
+    setData((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
     <View style={styles.container}>
-      {/* Carousel */}
-      <FlatList
-        data={data}
-        contentContainerStyle={{
-          gap: 10,
-        }}
-        keyExtractor={(_, index) => index.toString()}
+      {/* Horizontal ScrollView */}
+      <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: false }
-        )}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ gap: 10, paddingHorizontal: 10 }}
+      >
+        {data.map((item) => (
+          <View key={item.id} style={styles.itemContainer}>
             <Image
               source={item.image}
               style={styles.image}
               resizeMode="cover"
             />
             <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontSize: ms(14),
-                  fontWeight: 500,
-                  color: colors.white2,
-                }}
-              >
-                {item.heading}
-              </Text>
-              <Text
-                style={{
-                  fontSize: ms(12),
-                  fontWeight: 400,
-                  color: colors.secondary,
-                }}
-              >
-                {item.description}
-              </Text>
+              <Text style={styles.heading}>{item.heading}</Text>
+              <Text style={styles.description}>{item.description}</Text>
             </View>
 
             <Pressable
               onPress={() => handleClose(item.id)}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                backgroundColor: colors.gray2,
-                position: "absolute",
-                top: 2,
-                right: 2,
-                zIndex: 100,
-              }}
+              style={styles.closeButton}
             >
               <Entypo name="cross" size={15} color="white" />
             </Pressable>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
 
-      {/* Dots */}
+      {/* Dots Indicator */}
       <View style={styles.dotsContainer}>
-        {data.map((_: any, i: number) => {
+        {data.map((_, i) => {
           const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
 
           const dotWidth = scrollX.interpolate({
@@ -144,6 +116,7 @@ export default function StoryBox() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     marginTop: 10,
@@ -155,20 +128,40 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     width: width - 40,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    padding: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     backgroundColor: "#3A3A3A",
     borderRadius: 10,
     position: "relative",
-    overflow: "hidden",
   },
   image: {
     width: ms(50),
     height: ms(50),
     borderRadius: 5,
+  },
+  heading: {
+    fontSize: ms(14),
+    fontWeight: "500",
+    color: colors.white2,
+  },
+  description: {
+    fontSize: ms(12),
+    fontWeight: "400",
+    color: colors.secondary,
+  },
+  closeButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.gray2,
+    position: "absolute",
+    top: 2,
+    right: 2,
+    zIndex: 10,
   },
   dotsContainer: {
     flexDirection: "row",

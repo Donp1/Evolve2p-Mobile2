@@ -55,7 +55,7 @@ const AppSecurity = ({ setSelectedRoute, secret, qrd }: pageProps) => {
           ></Text>
         </Pressable>
       </View>
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ flex: 1 }}>
         <View style={styles.content}>
           <Text
             style={{
@@ -168,7 +168,8 @@ export default AppSecurity;
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    marginTop: vs(20),
+    paddingVertical: vs(20),
     paddingHorizontal: s(20),
+    backgroundColor: colors.primary,
   },
 });

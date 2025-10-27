@@ -25,6 +25,8 @@ import { Image } from "expo-image";
 import BottomSheet from "@/components/BottomSheet";
 import { set } from "lodash";
 import { useAlert } from "@/components/AlertService";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import SecurityCheck from "@/components/SecurityCheck";
 
 const goBack = () => {
   if (router.canGoBack()) router.back();
@@ -39,27 +41,60 @@ const SendCrypto = () => {
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("0");
   const [isCoinSheetVisible, setIsCoinSheetVisible] = useState(false);
+  const [show2fa, setShow2fa] = useState(false);
+  const [is2FaPassed, setIs2FaPassed] = useState(false);
 
   const { coin } = useLocalSearchParams();
-
   const [activeCoin, setActiveCoin] = useState(coin);
 
   const setUser = useUserStore((state) => state.setUser);
+  const user = useUserStore((state) => state.user);
   const coins = useCoinStore((state) => state.coins);
 
   const { AlertComponent, showAlert } = useAlert();
 
+  const selectedCoin = coins.find(
+    (c) => c.symbol.toLowerCase() === activeCoin?.toString().toLowerCase()
+  );
+
+  const selectedUserWallet = user?.wallets.find(
+    (wallet: any) =>
+      wallet.currency.toLowerCase() === activeCoin?.toString().toLowerCase()
+  );
+
   const handleSendCrypto = async () => {
     setLoading(true);
-
     if (!address) {
       setLoading(false);
-      return alert("Please enter a valid address or username.");
+      showAlert(
+        "Error",
+        "Please enter a valid address or username.",
+        [{ text: "OK", onPress() {} }],
+        "error"
+      );
+      return;
     }
 
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       setLoading(false);
-      return alert("Please enter a valid amount.");
+      showAlert(
+        "Error",
+        "Please enter a valid amount.",
+        [{ text: "OK", onPress() {} }],
+        "error"
+      );
+      return;
+    }
+
+    if (Number(amount) > Number(selectedUserWallet?.balance)) {
+      setLoading(false);
+      showAlert(
+        "Error",
+        "Amount is greater than your balance",
+        [{ text: "OK", onPress() {} }],
+        "error"
+      );
+      return;
     }
 
     if (!user?.kycVerified) {
@@ -99,9 +134,11 @@ const SendCrypto = () => {
       setLoading(false);
 
       if (send?.success) {
-        alert(
-          send?.message ||
-            `Successfully sent ${amount} ${activeCoin?.toString()} to ${address}`
+        showAlert(
+          "Success",
+          send?.message,
+          [{ text: "OK", onPress() {} }],
+          "success"
         );
 
         setAmount("");
@@ -115,39 +152,70 @@ const SendCrypto = () => {
         if (updatedUser?.success) {
           setUser(updatedUser?.user);
         } else {
-          alert("Failed to update user data. Please try again.");
+          showAlert(
+            "Error",
+            "Failed to update user data. Please try again.",
+            [{ text: "OK", onPress() {} }],
+            "error"
+          );
         }
       } else {
-        alert(`Failed to send ${activeCoin}. Error: ${send?.message}`);
+        showAlert(
+          "Error",
+          `Failed to send ${activeCoin}. Error: ${send?.message}`,
+          [{ text: "OK", onPress() {} }],
+          "error"
+        );
+        alert();
       }
     } catch (error) {
+      showAlert(
+        "Error",
+        "Error sending crypto: " + error,
+        [{ text: "OK", onPress() {} }],
+        "error"
+      );
       console.error("Error sending crypto:", error);
       setLoading(false);
     }
   };
 
-  const user = useUserStore((state) => state.user);
-  const selectedCoin = coins.find(
-    (c) => c.symbol.toLowerCase() === activeCoin?.toString().toLowerCase()
-  );
+  const sendConfirm = async () => {
+    if (!user?.is2faEnabled) {
+      showAlert("Error", "Please setup 2FA authentication to continue", [
+        { text: "Close", onPress() {} },
+        {
+          text: "Setup now",
+          onPress() {
+            router.push("/(authentication)/two-factor-auth");
+          },
+          style: { backgroundColor: colors.secondary },
+          textStyle: { color: colors.primary },
+        },
+      ]);
 
-  const selectedUserWallet = user?.wallets.find(
-    (wallet: any) =>
-      wallet.currency.toLowerCase() === activeCoin?.toString().toLowerCase()
-  );
+      return;
+    }
 
-  // const currentCoin = user?.wallets.find(
-  //   (wallet: any) => wallet.currency === activeCoin
-  // );
+    setShow2fa(true);
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (is2FaPassed) {
+        await handleSendCrypto();
+      }
+    })();
+  }, [is2FaPassed]);
 
   return (
     <>
       <SafeAreaView style={globalStyles.container}>
         {AlertComponent}
-        <KeyboardAvoidingView
-          style={{ flex: 1, backgroundColor: "blue" }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // adjust offset if needed
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          enableOnAndroid
+          extraScrollHeight={20}
         >
           <View style={globalStyles.topBar}>
             <Pressable
@@ -184,7 +252,7 @@ const SendCrypto = () => {
             }}
           >
             <ScrollView
-              showsVerticalScrollIndicator={true}
+              showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{
                 paddingBottom: 20,
@@ -284,20 +352,9 @@ const SendCrypto = () => {
                       }}
                       placeholder="0"
                       placeholderTextColor={colors.gray3}
-                      // defaultValue="0"
                       defaultValue={amount}
                       onChangeText={(e) => setAmount(e)}
                     />
-
-                    <Text
-                      style={{
-                        fontWeight: 500,
-                        fontSize: ms(14),
-                        color: colors.white2,
-                      }}
-                    >
-                      $ 0.00
-                    </Text>
                   </View>
                   <View>
                     <Text
@@ -521,7 +578,7 @@ const SendCrypto = () => {
 
               <View style={[globalStyles.bottomContainer]}>
                 <Pressable
-                  onPress={handleSendCrypto}
+                  onPress={sendConfirm}
                   disabled={
                     loading || !amount || !(Number(amount) > 0) || !address
                   }
@@ -546,7 +603,7 @@ const SendCrypto = () => {
               </View>
             </ScrollView>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
 
       <BottomSheet
@@ -610,6 +667,12 @@ const SendCrypto = () => {
           </Pressable>
         ))}
       </BottomSheet>
+
+      <SecurityCheck
+        setPassed={setIs2FaPassed}
+        setVisible={setShow2fa}
+        visible={show2fa}
+      />
     </>
   );
 };

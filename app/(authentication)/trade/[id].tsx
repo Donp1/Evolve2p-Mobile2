@@ -33,6 +33,7 @@ import CryptoConverter from "@/components/CurrencyPriceAmount";
 import { debounce, isArray } from "lodash";
 import { useAlert } from "@/components/AlertService";
 import ChatView from "@/components/ChatView";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const goBack = () => {
   if (router.canGoBack()) router.back();
@@ -304,12 +305,14 @@ const Trade = () => {
             </View>
             {/* end of topbar */}
 
-            <ScrollView
+            <KeyboardAwareScrollView
               showsVerticalScrollIndicator={false}
+              enableOnAndroid
+              extraScrollHeight={5}
               contentContainerStyle={{
                 paddingBottom: 100,
                 backgroundColor: colors.primary,
-                flex: 1,
+                flexGrow: 1,
                 paddingHorizontal: 10,
               }}
             >
@@ -675,7 +678,7 @@ const Trade = () => {
                 >
                   Offer Terms (please read carefully)
                 </Text>
-                {currentOffer?.terms || currentOffer?.terms == "" ? (
+                {currentOffer?.terms || currentOffer?.terms !== "" ? (
                   <View style={{}}>
                     <Text
                       style={{
@@ -706,7 +709,7 @@ const Trade = () => {
               </View>
 
               {/* read guide */}
-              <Pressable
+              {/* <Pressable
                 style={{
                   marginTop: 20,
                   flexDirection: "row",
@@ -729,7 +732,7 @@ const Trade = () => {
                 >
                   Read our guide for creating crypto
                 </Text>
-              </Pressable>
+              </Pressable> */}
               {/* end of read guide */}
 
               {/* submit button */}
@@ -769,7 +772,7 @@ const Trade = () => {
                 )}
               </Pressable>
               {/* end of submit button */}
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </>
         )}
       </SafeAreaView>

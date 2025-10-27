@@ -1,6 +1,6 @@
-import { fetchPrices, formatNumber, priceFormater } from "@/utils/countryStore";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { fetchPrices, priceFormater } from "@/utils/countryStore";
 import { SelectedCurrency } from "./PreferedCurrency";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
@@ -18,40 +18,7 @@ interface TotalBalanceProps {
   refreshing?: boolean;
 }
 
-// Mock API to fetch crypto & FX prices (replace with real API call)
-// const fetchPrices = async (
-//   currency: string
-// ): Promise<Record<string, number>> => {
-//   try {
-//     // Example mock prices in USD
-//     const cryptoPricesUSD: Record<string, number> = {
-//       BTC: 113500,
-//       ETH: 4400,
-//       USDT: 1,
-//       USDC: 1,
-//     };
-
-//     // Mock FX rates
-//     const fxRates: Record<string, number> = {
-//       USD: 1,
-//       NGN: 1600,
-//       EUR: 0.92,
-//     };
-
-//     const fxRate = fxRates[currency.toUpperCase()] ?? 1;
-
-//     // Convert crypto prices into requested currency
-//     const prices: Record<string, number> = {};
-//     Object.keys(cryptoPricesUSD).forEach((coin) => {
-//       prices[coin] = cryptoPricesUSD[coin] * fxRate;
-//     });
-
-//     return prices;
-//   } catch (error) {
-//     console.error("Error fetching prices:", error);
-//     return {};
-//   }
-// };
+const MAX_RETRIES = 3;
 
 const TotalBalance: React.FC<TotalBalanceProps> = ({
   data,
@@ -61,49 +28,88 @@ const TotalBalance: React.FC<TotalBalanceProps> = ({
 }) => {
   const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Prevent state updates on unmounted component
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    const calculateTotal = async () => {
-      setLoading(true);
-      const prices = await fetchPrices(currency?.code || "usd");
-
-      const totalValue = data.reduce((acc, item) => {
-        const price = prices[item.crypto?.toUpperCase()] ?? 0;
-        return acc + item.amount * price;
-      }, 0);
-
-      setTotal(totalValue);
-      setLoading(false);
+    return () => {
+      isMounted.current = false;
     };
+  }, []);
 
-    if (data.length > 0) {
-      calculateTotal();
-    } else {
+  const calculateTotal = useCallback(async () => {
+    if (!data?.length) {
       setTotal(0);
       setLoading(false);
+      return;
     }
-  }, [data, currency, refreshing == true]);
+
+    setLoading(true);
+    setError(null);
+
+    let attempts = 0;
+    let prices: Record<string, number> = {};
+
+    while (attempts < MAX_RETRIES) {
+      try {
+        prices = await fetchPrices(currency?.code || "usd");
+
+        if (Object.keys(prices).length > 0) {
+          break; // success
+        }
+      } catch (err: any) {
+        attempts++;
+        if (attempts >= MAX_RETRIES) {
+          if (isMounted.current) {
+            setError("Failed to fetch prices. Please try again.");
+            setLoading(false);
+          }
+          return;
+        }
+        // Exponential backoff before retry
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * Math.pow(2, attempts))
+        );
+      }
+    }
+
+    const totalValue = data.reduce((acc, item) => {
+      const price = prices[item.crypto?.toUpperCase()] ?? 0;
+      return acc + item.amount * price;
+    }, 0);
+
+    if (isMounted.current) {
+      setTotal(totalValue);
+      setLoading(false);
+    }
+  }, [data, currency]);
+
+  useEffect(() => {
+    calculateTotal();
+  }, [calculateTotal, refreshing]);
 
   if (loading || refreshing) {
     return (
-      <View style={{}}>
-        <ActivityIndicator size="small" color="#4CAF50" />
+      <View>
+        <ActivityIndicator size="small" color={colors.secondary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
-    <View style={{}}>
+    <View>
       {lockCurrency ? (
-        <Text
-          style={{
-            fontWeight: 700,
-            fontSize: ms(26),
-            color: colors.white2,
-          }}
-        >
-          ****
-        </Text>
+        <Text style={styles.hidden}>****</Text>
       ) : (
         <Text style={styles.value}>
           {currency?.symbol || "$"}{" "}
@@ -115,15 +121,20 @@ const TotalBalance: React.FC<TotalBalanceProps> = ({
 };
 
 const styles = StyleSheet.create({
-  label: {
-    fontSize: 16,
-    color: "#A0A0A0",
-    marginBottom: 4,
-  },
   value: {
-    fontSize: 22,
+    fontSize: ms(22),
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: colors.white2,
+  },
+  hidden: {
+    fontWeight: "700",
+    fontSize: ms(26),
+    color: colors.white2,
+  },
+  errorText: {
+    fontSize: ms(14),
+    color: "red",
+    fontWeight: "500",
   },
 });
 

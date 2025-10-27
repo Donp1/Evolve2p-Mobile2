@@ -73,11 +73,11 @@ const Methods = ({
         </Text>
 
         <Pressable
-          disabled={user?.authType == "app"}
+          disabled={user?.authType == "app" && user?.is2faEnabled}
           onPress={() => setSelectedRoute("app")}
           style={[
             globalStyles.sectionBox,
-            user?.authType == "app" && { opacity: 0.5 },
+            user?.authType == "app" && user?.is2faEnabled && { opacity: 0.5 },
             { marginTop: 20 },
           ]}
         >
@@ -126,10 +126,14 @@ const Methods = ({
                       fontWeight: 500,
                       fontSize: ms(12),
                       color:
-                        user?.authType == "app" ? colors.accent : "#66B9FF",
+                        user?.authType == "app" && user?.is2faEnabled
+                          ? colors.accent
+                          : "#66B9FF",
                     }}
                   >
-                    {user?.authType == "app" ? "Enabled" : "Recommended"}
+                    {user?.authType == "app" && user?.is2faEnabled
+                      ? "Enabled"
+                      : "Recommended"}
                   </Text>
                 </View>
               </View>
@@ -150,11 +154,11 @@ const Methods = ({
         </Pressable>
 
         <Pressable
-          disabled={user?.authType == "sms"}
+          disabled={user?.authType == "sms" && user?.is2faEnabled}
           onPress={() => setSelectedRoute("sms")}
           style={[
             globalStyles.sectionBox,
-            user?.authType == "sms" && { opacity: 0.5 },
+            user?.authType == "sms" && user?.is2faEnabled && { opacity: 0.5 },
             { marginTop: 20 },
           ]}
         >
@@ -187,7 +191,7 @@ const Methods = ({
                 >
                   SMS Authentication
                 </Text>
-                {user?.authType == "sms" && (
+                {user?.authType == "sms" && user?.is2faEnabled && (
                   <View
                     style={{
                       backgroundColor: "#3A3A3A",
@@ -201,10 +205,14 @@ const Methods = ({
                         fontWeight: 500,
                         fontSize: ms(12),
                         color:
-                          user?.authType == "sms" ? colors.accent : "#66B9FF",
+                          user?.authType == "sms" && user?.is2faEnabled
+                            ? colors.accent
+                            : "#66B9FF",
                       }}
                     >
-                      {user?.authType == "sms" ? "Enabled" : "Recommended"}
+                      {user?.authType == "sms" && user?.is2faEnabled
+                        ? "Enabled"
+                        : "Recommended"}
                     </Text>
                   </View>
                 )}
@@ -233,7 +241,8 @@ export default Methods;
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    marginTop: vs(20),
+    paddingTop: vs(20),
     paddingHorizontal: s(20),
+    backgroundColor: colors.primary,
   },
 });

@@ -60,7 +60,9 @@ const Language = () => {
         </Pressable>
       </View>
 
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{ flex: 1, backgroundColor: colors.primary }}
+      >
         <View style={{ paddingHorizontal: 15, marginVertical: 20 }}>
           {language.map((language, index) => (
             <Pressable
