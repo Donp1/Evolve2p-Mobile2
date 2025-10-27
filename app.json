@@ -4,7 +4,7 @@
     "slug": "Evolve2p",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/app-icon.jpg",
+    "icon": "./assets/images/app-icon.png",
     "scheme": "evolve2p",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
