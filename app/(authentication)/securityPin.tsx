@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ms, s } from "react-native-size-matters";
@@ -25,8 +25,19 @@ const SecurityPin = () => {
     (state) => state.setNotifications
   );
 
+  // useEffect(() => {
+  //   (async () => {
+  //     await deleteItemAsync("authToken");
+  //     router.replace("/login");
+  //   })();
+  // }, []);
+
   const goBack = useCallback(() => {
-    if (router.canGoBack()) router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/login");
+    }
   }, []);
 
   const handleOtp = useCallback(
@@ -46,16 +57,16 @@ const SecurityPin = () => {
             );
 
             return;
+          } else {
+            showAlert(
+              "Error",
+              res?.message || "An error occurred while checking your PIN.",
+              [{ text: "Ok", onPress() {} }],
+              "error"
+            );
+
+            return;
           }
-
-          showAlert(
-            "Error",
-            res?.message || "An error occurred while checking your PIN.",
-            [{ text: "Ok", onPress() {} }],
-            "error"
-          );
-
-          return;
         }
 
         const userRes = await getUser();

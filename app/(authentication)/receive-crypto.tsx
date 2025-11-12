@@ -168,7 +168,7 @@ const ReceiveCrypto = () => {
                 {currentCoin?.currency === "ETH" && "Ethereum"}
                 {currentCoin?.currency === "BTC" && "Bitcoin"}
                 {currentCoin?.currency === "USDT" && "TRON"}
-                {currentCoin?.currency === "USDC" && "TRON"}
+                {currentCoin?.currency === "USDC" && "BSC"}
               </Text>
             </View>
           </View>
@@ -222,8 +222,8 @@ const ReceiveCrypto = () => {
                 lineHeight: 20,
               }}
             >
-              Make sure to only send {coin} through the selected network: {coin}
-              . Sending incompatible cryptocurrencies or sending through a
+              Make sure to only send {coin} through the selected network.
+              Sending incompatible cryptocurrencies or sending through a
               different network may result in irreversible loss.
             </Text>
           </View>

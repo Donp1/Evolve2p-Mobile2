@@ -51,7 +51,7 @@ const Notification = () => {
             Notification
           </Text>
         </Pressable>
-        {loading ? (
+        {/* {loading ? (
           <View style={{ paddingHorizontal: 15 }}>
             <ActivityIndicator size="large" color="#4caf50" />
           </View>
@@ -68,10 +68,12 @@ const Notification = () => {
               Save
             </Text>
           </Pressable>
-        )}
+        )} */}
       </View>
 
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{ flex: 1, backgroundColor: colors.primary }}
+      >
         <View style={{ paddingHorizontal: 15, marginVertical: 20 }}>
           <Text
             style={{

@@ -225,7 +225,7 @@ const Prifile = () => {
             }
           />
 
-          {/* <ContentBox
+          <ContentBox
             onPress={() => router.push("/notification")}
             text="Notification"
             icon={
@@ -235,7 +235,7 @@ const Prifile = () => {
                 color={colors.accent}
               />
             }
-          /> */}
+          />
 
           <ContentBox
             onPress={() => router.push("/transaction-limit")}

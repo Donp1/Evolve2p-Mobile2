@@ -7,6 +7,8 @@ import { ms } from "react-native-size-matters";
 import { Image } from "expo-image";
 import CustomDropdown from "./CustomeDropdown";
 import { CountryDataProp } from "@/context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
 
 interface pageProps {
   setSelectedCountry: React.Dispatch<
@@ -61,46 +63,48 @@ const SelectDropdown = ({ selectedCountry, setSelectedCountry }: pageProps) => {
   }, [isLoading, isError, countriesData]);
 
   return (
-    <View style={styles.container}>
-      <View
-        style={[
-          {
-            backgroundColor: colors.gray2,
-            borderWidth: 0,
-            width: "100%",
-            borderRadius: 5,
-            overflow: "hidden",
-            flexDirection: "row",
-            alignItems: "center",
-            position: "relative",
-          },
-          selectedCountry && { borderWidth: 1, borderColor: "green" },
-        ]}
-      >
+    <SafeAreaView style={[globalStyles.container, {}]}>
+      <View style={styles.container}>
         <View
-          style={{
-            width: 50,
-            height: 20,
-            position: "absolute",
-          }}
+          style={[
+            {
+              backgroundColor: colors.gray2,
+              borderWidth: 0,
+              width: "100%",
+              borderRadius: 5,
+              overflow: "hidden",
+              flexDirection: "row",
+              alignItems: "center",
+              position: "relative",
+            },
+            selectedCountry && { borderWidth: 1, borderColor: "green" },
+          ]}
         >
-          <Image
-            source={{ uri: selectedCountry?.flag }}
-            contentFit="contain"
-            contentPosition="center"
-            style={{ flex: 1 }}
+          <View
+            style={{
+              width: 50,
+              height: 20,
+              position: "absolute",
+            }}
+          >
+            <Image
+              source={{ uri: selectedCountry?.flag }}
+              contentFit="contain"
+              contentPosition="center"
+              style={{ flex: 1 }}
+            />
+          </View>
+
+          <CustomDropdown
+            setIsOpen={setIsOpen}
+            isOpen={isOpen}
+            selectedItem={selectedCountry}
+            setSelectedItem={setSelectedCountry}
+            data={countries}
           />
         </View>
-
-        <CustomDropdown
-          setIsOpen={setIsOpen}
-          isOpen={isOpen}
-          selectedItem={selectedCountry}
-          setSelectedItem={setSelectedCountry}
-          data={countries}
-        />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

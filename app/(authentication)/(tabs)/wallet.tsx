@@ -117,6 +117,29 @@ const Wallet = () => {
   }, [fetchCoins]);
 
   const handleSendCrypto = () => {
+    if (user?.status == "SUSPENDED") {
+      showAlert(
+        "Account Suspended",
+        "Your account has been suspended. Please contact support for assistance.",
+        [
+          //  {
+          //    text: "Set Now",
+          //    onPress() {
+          //      router.push("/(authentication)/");
+          //    },
+          //    style: { backgroundColor: colors.accent },
+          //    textStyle: { color: colors.primary },
+          //  },
+          {
+            text: "Close",
+            onPress() {},
+          },
+        ],
+        "error"
+      );
+      return;
+    }
+
     if (!user?.kycVerified) {
       showAlert(
         "Not Verified",
@@ -165,6 +188,59 @@ const Wallet = () => {
 
     setCryptoAction("Send");
     setIsCryptoBoxVisible(true);
+  };
+
+  const handleRecieveCrypto = () => {
+    if (user?.status == "SUSPENDED") {
+      showAlert(
+        "Account Suspended",
+        "Your account has been suspended. Please contact support for assistance.",
+        [
+          //  {
+          //    text: "Set Now",
+          //    onPress() {
+          //      router.push("/(authentication)/");
+          //    },
+          //    style: { backgroundColor: colors.accent },
+          //    textStyle: { color: colors.primary },
+          //  },
+          {
+            text: "Close",
+            onPress() {},
+          },
+        ],
+        "error"
+      );
+      return;
+    }
+    setCryptoAction("Receive");
+    setIsCryptoBoxVisible(true);
+  };
+
+  const handleSwapCrypto = () => {
+    if (user?.status == "SUSPENDED") {
+      showAlert(
+        "Account Suspended",
+        "Your account has been suspended. Please contact support for assistance.",
+        [
+          //  {
+          //    text: "Set Now",
+          //    onPress() {
+          //      router.push("/(authentication)/");
+          //    },
+          //    style: { backgroundColor: colors.accent },
+          //    textStyle: { color: colors.primary },
+          //  },
+          {
+            text: "Close",
+            onPress() {},
+          },
+        ],
+        "error"
+      );
+      return;
+    }
+    router.push("/swap");
   };
 
   return (
@@ -270,10 +346,7 @@ const Wallet = () => {
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                setCryptoAction("Receive");
-                setIsCryptoBoxVisible(true);
-              }}
+              onPress={() => handleRecieveCrypto()}
               style={[
                 globalStyles.sectionBox,
                 {
@@ -302,7 +375,7 @@ const Wallet = () => {
             </Pressable>
 
             <Pressable
-              onPress={() => router.push("/swap")}
+              onPress={() => handleSwapCrypto()}
               style={[
                 globalStyles.sectionBox,
                 {
@@ -346,6 +419,7 @@ const Wallet = () => {
           </View>
 
           <Assets lockCurrency={lockCurrency} />
+
           <View
             style={{
               flexDirection: "row",

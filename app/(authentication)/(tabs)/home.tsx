@@ -55,6 +55,7 @@ const Home = () => {
   const setCoin = useCoins((state) => state.setCoin);
   const { coins, fetchCoins } = useCoinStore();
   const user = useUserStore((state) => state.user);
+
   const router = useRouter();
   const pathname = usePathname();
 
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
   greeting: { fontSize: ms(14), fontWeight: "400", color: colors.gray3 },
   username: { fontSize: ms(14), fontWeight: "400", color: colors.white2 },
   scrollContent: {
-    flex: 1,
+    flexGrow: 1,
     paddingBottom: 100,
     backgroundColor: colors.primary,
   },

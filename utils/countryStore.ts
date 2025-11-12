@@ -35,47 +35,103 @@ export function formatSecretWithDashes(
 const base_url = "https://evolve2p-backend.onrender.com";
 
 export const sendOtp = async (email: string) => {
-  const res = await fetch(base_url + "/api/send-otp", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/send-otp", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const verifyOtp = async (email: string, otp: string) => {
-  const res = await fetch(base_url + "/api/verify-email", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, otp }),
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/verify-email", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, otp }),
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const checkEmailExist = async (email: string) => {
-  const res = await fetch(base_url + "/api/check-email-exist", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/check-email-exist", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const checkUsernamExist = async (username: string) => {
-  const res = await fetch(base_url + "/api/check-username-exist", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username }),
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/check-username-exist", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username }),
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const createUser = async (user: {
@@ -86,42 +142,84 @@ export const createUser = async (user: {
   username: string;
   emailVerified: boolean;
 }) => {
-  const res = await fetch(base_url + "/api/auth/register", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(user),
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/auth/register", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const login = async (user: { email: string; password: string }) => {
-  const res = await fetch(base_url + "/api/auth/login", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(user),
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/auth/login", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const updateUser = async (user: any) => {
-  const token = await getItemAsync("authToken");
-  let data;
-  if (token) {
-    data = JSON.parse(token);
+  try {
+    const token = await getItemAsync("authToken");
+    let data;
+    if (token) {
+      data = JSON.parse(token);
+    }
+    const res = await fetch(base_url + "/api/update-user", {
+      headers: {
+        Authorization: "Bearer " + data?.token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+      method: "PUT",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
-  const res = await fetch(base_url + "/api/update-user", {
-    headers: {
-      Authorization: "Bearer " + data?.token,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(user),
-    method: "PUT",
-  });
-  return await res.json();
 };
 
 export const getUser = async () => {
@@ -153,6 +251,16 @@ export const getUser = async () => {
     }
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -176,6 +284,16 @@ export const getUserById = async (userId: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -202,6 +320,48 @@ export const checkPin = async (pin: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
+};
+
+export const forgotPin = async (newPin: string, password: string) => {
+  try {
+    const token = await getItemAsync("authToken");
+    let data;
+    if (token) {
+      data = JSON.parse(token);
+    }
+
+    const res = await fetch(base_url + "/api/reset-pin", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + data?.token,
+      },
+      body: JSON.stringify({ password, newPin }),
+      method: "PUT",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -224,49 +384,101 @@ export const verifySecret = async (pin: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
 export const checkToken = async (token: string) => {
-  const res = await fetch(base_url + "/api/check-token", {
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/check-token", {
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const forgotPassword = async (email: string, password: string) => {
-  const res = await fetch(base_url + "/api/forgot-password", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password }),
-    method: "PUT",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/forgot-password", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+      method: "PUT",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const changePassword = async (
   currentPassword: string,
   newPassword: string
 ) => {
-  const token = await getItemAsync("authToken");
-  let data;
-  if (token) {
-    data = JSON.parse(token);
+  try {
+    const token = await getItemAsync("authToken");
+    let data;
+    if (token) {
+      data = JSON.parse(token);
+    }
+    const res = await fetch(base_url + "/api/change-password", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + data?.token,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+      method: "PUT",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
-  const res = await fetch(base_url + "/api/change-password", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + data?.token,
-    },
-    body: JSON.stringify({ currentPassword, newPassword }),
-    method: "PUT",
-  });
-  return await res.json();
 };
 
 export const createOffer = async (
@@ -307,6 +519,16 @@ export const createOffer = async (
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -330,62 +552,118 @@ export const createTrust = async (trustedId: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
 export const getOffers = async (
   params?: Record<string, string | number | (string | number)[]>
 ) => {
-  // Build query string if params exist
-  const queryString = params
-    ? "?" +
-      Object.entries(params)
-        .flatMap(([key, value]) =>
-          Array.isArray(value)
-            ? value.map(
-                (v) =>
-                  `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`
-              )
-            : `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
-        )
-        .join("&")
-    : "";
-  const res = await fetch(`${base_url}/api/get-offers${queryString}`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "GET",
-  });
+  try {
+    // Build query string if params exist
+    const queryString = params
+      ? "?" +
+        Object.entries(params)
+          .flatMap(([key, value]) =>
+            Array.isArray(value)
+              ? value.map(
+                  (v) =>
+                    `${encodeURIComponent(key)}=${encodeURIComponent(
+                      String(v)
+                    )}`
+                )
+              : `${encodeURIComponent(key)}=${encodeURIComponent(
+                  String(value)
+                )}`
+          )
+          .join("&")
+      : "";
+    const res = await fetch(`${base_url}/api/get-offers${queryString}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "GET",
+    });
 
-  return await res.json();
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const getUserOffers = async (userId: string) => {
-  const token = await getItemAsync("authToken");
-  let data;
-  if (token) {
-    data = JSON.parse(token);
-  }
-  const res = await fetch(`${base_url}/api/get-user-offers`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + data?.token,
-    },
-    body: JSON.stringify({ userId }),
-    method: "POST",
-  });
+  try {
+    const token = await getItemAsync("authToken");
+    let data;
+    if (token) {
+      data = JSON.parse(token);
+    }
+    const res = await fetch(`${base_url}/api/get-user-offers`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + data?.token,
+      },
+      body: JSON.stringify({ userId }),
+      method: "POST",
+    });
 
-  return await res.json();
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const getPaymentMethods = async () => {
-  const res = await fetch(base_url + "/api/get-payment-methods", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "GET",
-  });
-  return await res.json();
+  try {
+    const res = await fetch(base_url + "/api/get-payment-methods", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "GET",
+    });
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
+  }
 };
 
 export const getCoinPrice = async (coinName: string) => {
@@ -432,6 +710,16 @@ export const getInquiryId = async () => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -453,6 +741,16 @@ export const getVerificationStatus = async (id: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -474,6 +772,16 @@ export const deleteAccount = async () => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -496,6 +804,16 @@ export const generate2fa = async () => {
     return resData;
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -523,6 +841,16 @@ export const sendCrypto = async (
     return resData;
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -636,6 +964,16 @@ export const swapToken = async (
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -829,53 +1167,6 @@ export async function convertCryptoToCurrency(
     return 0;
   }
 }
-
-// export async function convertCurrencyToCrypto(
-//   crypto: string,
-//   amount: number, // fiat amount (e.g., 10000 NGN, 100 USD)
-//   currency: string // fiat currency code (e.g., "NGN", "USD")
-// ): Promise<number> {
-//   const COINGECKO_IDS: Record<string, string> = {
-//     BTC: "bitcoin",
-//     ETH: "ethereum",
-//     USDT: "tether",
-//     USDC: "usd-coin",
-//   };
-
-//   try {
-//     const coinId = COINGECKO_IDS[crypto.toUpperCase()];
-//     if (!coinId) throw new Error("Unsupported crypto");
-
-//     // Step 1: Fetch crypto price in USD
-//     const priceResp = await fetch(
-//       `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
-//     );
-//     const priceData = await priceResp.json();
-//     const usdPrice = priceData[coinId]?.usd;
-//     if (!usdPrice) throw new Error("Failed to fetch crypto price");
-
-//     // Step 2: If fiat currency is USD, convert directly
-//     if (currency.toUpperCase() === "USD") {
-//       return amount / usdPrice; // ✅ USD → crypto
-//     }
-
-//     // Step 3: Convert fiat → USD first
-//     const rateResp = await fetch("https://open.er-api.com/v6/latest/USD");
-//     const rateData = await rateResp.json();
-//     const rate = rateData.rates?.[currency.toUpperCase()];
-//     if (!rate) throw new Error("Currency not supported");
-
-//     // 1 USD = `rate` targetCurrency
-//     // So amount in target currency → USD = amount / rate
-//     const amountInUSD = amount / rate;
-
-//     // Step 4: USD → crypto
-//     return amountInUSD / usdPrice;
-//   } catch (err: any) {
-//     console.error("Conversion error:", err.message);
-//     return 0;
-//   }
-// }
 
 type Cache<T> = { value: T; at: number };
 const TTL_MS = 60_000; // 1 minute cache
@@ -1125,6 +1416,16 @@ export const getSettings = async () => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -1146,6 +1447,16 @@ export const markAsPaid = async (tradeId: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -1167,6 +1478,16 @@ export const releaseCrypto = async (tradeId: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -1188,6 +1509,16 @@ export const cancelTrade = async (tradeId: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -1229,6 +1560,16 @@ export const openDispute = async (
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -1250,30 +1591,18 @@ export const getChats = async (chatId: string) => {
     return await res.json();
   } catch (error) {
     console.log(error);
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
-
-// export const sendChat = async (chatId: string, content: string) => {
-//   const token = await getItemAsync("authToken");
-//   let data;
-//   if (token) {
-//     data = JSON.parse(token);
-//   }
-//   try {
-//     const res = await fetch(base_url + "/api/send-chat", {
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: "Bearer " + data?.token,
-//       },
-//       body: JSON.stringify({ chatId, content }),
-
-//       method: "POST",
-//     });
-//     return await res.json();
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
 
 export const sendChat = async (
   chatId: string,
@@ -1315,7 +1644,16 @@ export const sendChat = async (
     return await res.json();
   } catch (error) {
     console.log("sendChat error:", error);
-    throw error;
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      return {
+        error: true,
+        message:
+          "Network connection failed. Please check your internet and try again or restart the app.",
+      };
+    }
   }
 };
 
@@ -1326,28 +1664,6 @@ type Notification = {
   createdAt: string | Date;
   [key: string]: any; // allow extra fields
 };
-
-// export function groupNotificationsByDate(notifications: Notification[]) {
-//   return notifications.reduce<Record<string, Notification[]>>((groups, n) => {
-//     const date = new Date(n.createdAt);
-
-//     let label: string;
-//     if (isToday(date)) {
-//       label = "Today";
-//     } else if (isYesterday(date)) {
-//       label = "Yesterday";
-//     } else {
-//       label = format(date, "MMMM d, yyyy"); // e.g. August 25, 2025
-//     }
-
-//     if (!groups[label]) {
-//       groups[label] = [];
-//     }
-
-//     groups[label].push(n);
-//     return groups;
-//   }, {});
-// }
 
 export function groupNotificationsByDate(notifications: Notification[]) {
   const groups: Record<string, Notification[]> = {};

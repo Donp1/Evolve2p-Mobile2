@@ -86,13 +86,15 @@ const Assets = ({ lockCurrency }: PageProps) => {
   }
 
   return (
-    <FlatList
-      scrollEnabled={false}
-      data={coins}
-      keyExtractor={(coin) => coin.symbol}
-      renderItem={renderItem}
-      contentContainerStyle={{ paddingTop: 10 }}
-    />
+    <>
+      <FlatList
+        scrollEnabled={false}
+        data={coins}
+        keyExtractor={(coin) => coin.symbol}
+        renderItem={renderItem}
+        contentContainerStyle={{ paddingTop: 10 }}
+      />
+    </>
   );
 };
 

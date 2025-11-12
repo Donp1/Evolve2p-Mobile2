@@ -115,8 +115,18 @@ const AuthLayout = () => {
     };
 
     socket.on("new_notification", handleNewMessage);
+    socket.on("receive_coin", async (data) => {
+      await handleNewMessage(data);
+      const newUser = await getUser();
+      setUser(newUser?.user);
+    });
 
     return () => {
+      socket.off("receive_coin", async (data) => {
+        const newUser = await getUser();
+        setUser(newUser);
+      });
+
       socket.off("new_notification", handleNewMessage);
       socket.disconnect();
     };

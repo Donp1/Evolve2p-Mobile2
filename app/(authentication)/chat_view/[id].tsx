@@ -59,8 +59,6 @@ const ChatScreen = () => {
 
   const { AlertComponent, showAlert } = useAlert();
 
-  console.log(currentTrade);
-
   useEffect(() => {
     (async () => {
       setLoading(true);

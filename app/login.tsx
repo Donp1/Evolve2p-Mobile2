@@ -1,11 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ms } from "react-native-size-matters";
@@ -26,15 +20,13 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const passwordInputRef = useRef<TextInput>(null);
-
   const { showAlert, AlertComponent } = useAlert();
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
   }, []);
 
-  const handleLogin = useCallback(async () => {
+  const handleLogin = async () => {
     if (!email || !password) return;
 
     setIsLoading(true);
@@ -42,14 +34,20 @@ const Login = () => {
       const res = await login({ email, password });
 
       if (res?.error) {
-        showAlert("Error", res?.message, [{ text: "Close", onPress() {
-          
-        }, }], "error");
+        showAlert(
+          "Error",
+          res?.message,
+          [{ text: "Close", onPress() {} }],
+          "error"
+        );
         return;
       }
 
       if (res?.success) {
-        await setItemAsync("authToken", JSON.stringify({ token: res?.accessToken }));
+        await setItemAsync(
+          "authToken",
+          JSON.stringify({ token: res?.accessToken })
+        );
         router.push("/securityPin");
       }
     } catch (error: any) {
@@ -58,14 +56,12 @@ const Login = () => {
           ? "Unable to connect. Please check your internet connection."
           : String(error);
 
-      showAlert("Error", message, [{ text: "Close", onPress() {
-        
-      }, }], "error");
+      showAlert("Error", message, [{ text: "Close", onPress() {} }], "error");
       console.error("Login failed:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, showAlert]);
+  };
 
   return (
     <>
@@ -73,7 +69,11 @@ const Login = () => {
       <SafeAreaView style={globalStyles.container}>
         <View style={globalStyles.topBar}>
           <Pressable onPress={goBack} style={styles.backButton}>
-            <FontAwesome name="chevron-left" color={colors.secondary} size={15} />
+            <FontAwesome
+              name="chevron-left"
+              color={colors.secondary}
+              size={15}
+            />
           </Pressable>
         </View>
 
@@ -82,21 +82,21 @@ const Login = () => {
           enableOnAndroid
           extraScrollHeight={20} // pushes content above keyboard
         >
-          <CreateContainer heading="Welcome Back!" text="Log in to continue trading securely.">
+          <CreateContainer
+            heading="Welcome Back!"
+            text="Log in to continue trading securely."
+          >
             {/* Email */}
             <View style={[globalStyles.form, styles.formSpacing]}>
               <Text style={globalStyles.formLabel}>Email</Text>
               <View style={globalStyles.formInputContainer}>
                 <TextInput
-                  ref={passwordInputRef}
-                  value={email}
+                  defaultValue={email}
                   onChangeText={setEmail}
                   placeholder="Enter your email address"
                   style={globalStyles.formInput}
                   inputMode="email"
-                  returnKeyType="next"
                   placeholderTextColor={colors.white}
-                  onSubmitEditing={() => passwordInputRef.current?.focus()}
                 />
               </View>
             </View>
@@ -106,15 +106,12 @@ const Login = () => {
               <Text style={globalStyles.formLabel}>Password</Text>
               <View style={globalStyles.formInputContainer}>
                 <TextInput
-                  ref={passwordInputRef}
-                  value={password}
-                  onChangeText={setPassword}
+                  defaultValue={password}
+                  onChangeText={(e) => setPassword(e)}
                   placeholder="Enter your password"
                   style={globalStyles.formInput}
                   secureTextEntry={passwordIsSecure}
                   placeholderTextColor={colors.white}
-                  returnKeyType="done"
-                  onSubmitEditing={handleLogin}
                 />
                 <Pressable onPress={() => setPasswordIsSecure((prev) => !prev)}>
                   <Feather
@@ -142,7 +139,11 @@ const Login = () => {
                   (isLoading || !email || !password) && { opacity: 0.5 },
                 ]}
               >
-                {isLoading ? <Spinner width={20} height={20} /> : <Text style={globalStyles.btnText}>Log in</Text>}
+                {isLoading ? (
+                  <Spinner width={20} height={20} />
+                ) : (
+                  <Text style={globalStyles.btnText}>Log in</Text>
+                )}
               </Pressable>
 
               {/* Register */}

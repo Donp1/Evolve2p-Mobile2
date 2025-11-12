@@ -36,6 +36,8 @@ import PaymentMethodSelector, {
 import PreferedCurrency, {
   SelectedCurrency,
 } from "@/components/PreferedCurrency";
+import { useUserStore } from "@/store/userStore";
+import { useAlert } from "@/components/AlertService";
 
 const Market = () => {
   const coins = useCoinStore((state) => state.coins);
@@ -58,7 +60,33 @@ const Market = () => {
     currency: selectedCurrency?.code || "USD",
   });
 
+  const user = useUserStore((state: any) => state.user);
+
+  const { AlertComponent, showAlert } = useAlert();
+
   const handleTrade = useCallback((id: string) => {
+    if (user?.status == "SUSPENDED") {
+      showAlert(
+        "Account Suspended",
+        "Your account has been suspended. Please contact support for assistance.",
+        [
+          //  {
+          //    text: "Set Now",
+          //    onPress() {
+          //      router.push("/(authentication)/");
+          //    },
+          //    style: { backgroundColor: colors.accent },
+          //    textStyle: { color: colors.primary },
+          //  },
+          {
+            text: "Close",
+            onPress() {},
+          },
+        ],
+        "error"
+      );
+      return;
+    }
     router.push({ pathname: "/trade/[id]", params: { id } });
   }, []);
 

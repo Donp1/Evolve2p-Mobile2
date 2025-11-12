@@ -12,34 +12,83 @@ import { globalStyles } from "@/utils/globalStyles";
 import { colors } from "@/constants";
 import { Link, router } from "expo-router";
 import CreateContainer from "@/components/createAccount/CreateContainer";
-import { ms } from "react-native-size-matters";
+import { ms, s } from "react-native-size-matters";
 import Spinner from "@/components/Spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CustomeOtp from "@/components/CustomeOtp";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { forgotPin } from "@/utils/countryStore";
+import { useAlert } from "@/components/AlertService";
 
 const ForgotPin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [passwordIsSecure, setPasswordIsSecure] = useState(true);
+  const [newPin, setNewPin] = useState("");
+
+  const { AlertComponent, showAlert } = useAlert();
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
   };
 
   const handleLogin = async () => {
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+      const res = await forgotPin(newPin, password);
+
+      if (res?.error) {
+        setIsLoading(false);
+        showAlert(
+          "Error",
+          res?.message,
+          [{ text: "Close", onPress() {} }],
+          "error"
+        );
+        return;
+      }
+
+      if (res?.success) {
+        setIsLoading(false);
+        showAlert(
+          "Success",
+          res?.message,
+          [
+            {
+              text: "OK",
+              onPress() {
+                router.push("/(authentication)/securityPin");
+              },
+            },
+          ],
+          "success"
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtp = async (pin: string) => {
+    if (pin?.length >= 4) {
+      setNewPin(pin);
+    }
   };
 
   return (
     <SafeAreaView style={[globalStyles.container]}>
+      {AlertComponent}
       <View style={globalStyles.topBar}>
         <Pressable onPress={goBack} style={{ padding: 15 }}>
           <FontAwesome name="chevron-left" color={colors.secondary} size={15} />
         </Pressable>
       </View>
 
-      <ScrollView
-        style={{ flexGrow: 1 }}
+      <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
+        enableOnAndroid
+        extraScrollHeight={20}
       >
         <CreateContainer
           heading="Reset Security PIN"
@@ -56,7 +105,9 @@ const ForgotPin = () => {
                 defaultValue={password}
                 onChangeText={(e) => setPassword(e)}
                 secureTextEntry={passwordIsSecure}
+                autoFocus
               />
+
               <Pressable
                 onPress={() => setPasswordIsSecure((current) => !current)}
               >
@@ -67,36 +118,21 @@ const ForgotPin = () => {
                 )}
               </Pressable>
             </View>
+            <Text style={globalStyles.formLabel}>New PIN</Text>
+            <View style={[globalStyles.form, styles.form]}>
+              <View style={styles.otpWrapper}>
+                <CustomeOtp handleOtp={handleOtp} numberofDigits={4} />
+              </View>
+            </View>
           </View>
-
-          <Link href="/resetPassword" asChild>
-            <Pressable
-              style={{
-                width: "100%",
-                justifyContent: "flex-end",
-                alignItems: "flex-end",
-                marginVertical: 10,
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.secondary,
-                  fontWeight: 700,
-                  fontSize: ms(14),
-                }}
-              >
-                Forgot password
-              </Text>
-            </Pressable>
-          </Link>
 
           <View style={globalStyles.bottomContainer}>
             <Pressable
-              disabled={isLoading || !password}
+              disabled={isLoading || !password || !newPin}
               onPress={handleLogin}
               style={[
                 globalStyles.btn,
-                (isLoading || !password) && { opacity: 0.5 },
+                (isLoading || !password || !newPin) && { opacity: 0.5 },
                 { marginVertical: 20 },
               ]}
             >
@@ -106,11 +142,18 @@ const ForgotPin = () => {
             </Pressable>
           </View>
         </CreateContainer>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };
 
 export default ForgotPin;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  form: {
+    paddingTop: 20,
+  },
+  otpWrapper: {
+    paddingHorizontal: s(30),
+  },
+});
