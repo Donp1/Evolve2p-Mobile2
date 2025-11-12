@@ -10,6 +10,8 @@ import {
 import React, { PropsWithChildren, ReactNode } from "react";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
 
 type pageProp = {
   heading: string;
@@ -22,22 +24,24 @@ const CreateContainer = ({
   children,
 }: PropsWithChildren<pageProp>) => {
   return (
-    <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
-      <View style={styles.container}>
-        <View
-          style={{
-            paddingTop: 24,
-            display: "flex",
-            gap: 8,
-          }}
-        >
-          <Text style={styles.topHeading}>{heading}</Text>
-          <Text style={styles.topText}>{text}</Text>
-        </View>
+    <SafeAreaView style={globalStyles.container}>
+      <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
+        <View style={styles.container}>
+          <View
+            style={{
+              paddingTop: 24,
+              display: "flex",
+              gap: 8,
+            }}
+          >
+            <Text style={styles.topHeading}>{heading}</Text>
+            <Text style={styles.topText}>{text}</Text>
+          </View>
 
-        {children}
-      </View>
-    </Pressable>
+          {children}
+        </View>
+      </Pressable>
+    </SafeAreaView>
   );
 };
 
