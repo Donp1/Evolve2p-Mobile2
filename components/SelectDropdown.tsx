@@ -63,7 +63,7 @@ const SelectDropdown = ({ selectedCountry, setSelectedCountry }: pageProps) => {
   }, [isLoading, isError, countriesData]);
 
   return (
-    <SafeAreaView style={[globalStyles.container, {}]}>
+    <>
       <View style={styles.container}>
         <View
           style={[
@@ -94,17 +94,16 @@ const SelectDropdown = ({ selectedCountry, setSelectedCountry }: pageProps) => {
               style={{ flex: 1 }}
             />
           </View>
-
-          <CustomDropdown
-            setIsOpen={setIsOpen}
-            isOpen={isOpen}
-            selectedItem={selectedCountry}
-            setSelectedItem={setSelectedCountry}
-            data={countries}
-          />
         </View>
       </View>
-    </SafeAreaView>
+      <CustomDropdown
+        setIsOpen={setIsOpen}
+        isOpen={isOpen}
+        selectedItem={selectedCountry}
+        setSelectedItem={setSelectedCountry}
+        data={countries}
+      />
+    </>
   );
 };
 

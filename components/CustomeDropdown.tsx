@@ -22,6 +22,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { ms } from "react-native-size-matters";
 import { CountryDataProp } from "@/context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { globalStyles } from "@/utils/globalStyles";
 
 interface pageProps {
   data: myCountriesDataProps;
@@ -55,85 +57,86 @@ const CustomeDropdown = ({
     clearSearchInput();
   }, []);
   return (
-    <View style={{ flex: 1 }}>
-      <Pressable
-        onPress={() => setIsOpen(!isOpen)}
-        style={styles.dropdownButton}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
-          {selectedItem && (
-            <View>
-              <Image
-                source={{ uri: selectedItem.flag }}
-                contentFit="contain"
-                contentPosition="center"
-                style={{ width: 30, height: 50 }}
-              />
-            </View>
-          )}
-          <Text style={styles.selectedValue}>
-            {selectedItem?.name ? selectedItem.name : "Select a Country"}
-          </Text>
-        </View>
-        <Ionicons name="chevron-down" size={20} color="#ccc" />
-      </Pressable>
-
-      <Modal transparent={false} animationType="slide" visible={isOpen}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {/* Search Input */}
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholderTextColor={colors.secondary}
-                placeholder="Search..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus
-                keyboardType="web-search"
-              />
-
-              {/* Clear Button (X Icon) */}
-              {searchQuery ? (
-                <Pressable
-                  onPress={clearSearchInput}
-                  style={styles.clearButton}
-                >
-                  <Ionicons name="close" size={30} color="#ccc" />
-                </Pressable>
-              ) : null}
-            </View>
-            <FlashList
-              showsVerticalScrollIndicator={false}
-              data={filteredData}
-              scrollEnabled
-              estimatedItemSize={20}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: 10,
-                  }}
-                  onPress={() => handleItemSelect(item)}
-                >
-                  <Item item={item} />
-                  <View
-                    style={[
-                      styles.radio,
-                      selectedItem?.name === item.name && {
-                        borderColor: "green",
-                      },
-                    ]}
-                  />
-                </Pressable>
-              )}
-            />
+    <SafeAreaView style={[globalStyles.container, {}]}>
+      <View style={{ flex: 1, backgroundColor: colors.primary }}>
+        <Pressable
+          onPress={() => setIsOpen(!isOpen)}
+          style={styles.dropdownButton}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            {selectedItem && (
+              <View>
+                <Image
+                  source={{ uri: selectedItem.flag }}
+                  contentFit="contain"
+                  contentPosition="center"
+                  style={{ width: 30, height: 50 }}
+                />
+              </View>
+            )}
+            <Text style={styles.selectedValue}>
+              {selectedItem?.name ? selectedItem.name : "Select a Country"}
+            </Text>
           </View>
-        </View>
-      </Modal>
-    </View>
+          <Ionicons name="chevron-down" size={20} color="#ccc" />
+        </Pressable>
+
+        <Modal transparent={false} animationType="slide" visible={isOpen}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {/* Search Input */}
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholderTextColor={colors.secondary}
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoFocus
+                  keyboardType="web-search"
+                />
+
+                {/* Clear Button (X Icon) */}
+                {searchQuery ? (
+                  <Pressable
+                    onPress={clearSearchInput}
+                    style={styles.clearButton}
+                  >
+                    <Ionicons name="close" size={30} color="#ccc" />
+                  </Pressable>
+                ) : null}
+              </View>
+              <FlashList
+                showsVerticalScrollIndicator={false}
+                data={filteredData}
+                scrollEnabled
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: 10,
+                    }}
+                    onPress={() => handleItemSelect(item)}
+                  >
+                    <Item item={item} />
+                    <View
+                      style={[
+                        styles.radio,
+                        selectedItem?.name === item.name && {
+                          borderColor: "green",
+                        },
+                      ]}
+                    />
+                  </Pressable>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 

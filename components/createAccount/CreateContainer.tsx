@@ -24,24 +24,22 @@ const CreateContainer = ({
   children,
 }: PropsWithChildren<pageProp>) => {
   return (
-    <SafeAreaView style={globalStyles.container}>
-      <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
-        <View style={styles.container}>
-          <View
-            style={{
-              paddingTop: 24,
-              display: "flex",
-              gap: 8,
-            }}
-          >
-            <Text style={styles.topHeading}>{heading}</Text>
-            <Text style={styles.topText}>{text}</Text>
-          </View>
-
-          {children}
+    <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
+      <View style={styles.container}>
+        <View
+          style={{
+            paddingTop: 24,
+            display: "flex",
+            gap: 8,
+          }}
+        >
+          <Text style={styles.topHeading}>{heading}</Text>
+          <Text style={styles.topText}>{text}</Text>
         </View>
-      </Pressable>
-    </SafeAreaView>
+
+        {children}
+      </View>
+    </Pressable>
   );
 };
 

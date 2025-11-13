@@ -28,26 +28,24 @@ export default function RootLayoutNav() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <StatusBar
-          // backgroundColor="transparent"
-          translucent
-          animated
-          style="light"
+      <StatusBar
+        // backgroundColor="transparent"
+        translucent
+        animated
+        style="light"
+      />
+      <Stack screenOptions={{ animation: "fade" }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="forgotPin" options={{ headerShown: false }} />
+        <Stack.Screen name="resetPassword" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(authentication)"
+          options={{ headerShown: false }}
         />
-        <Stack screenOptions={{ animation: "fade" }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="welcome" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="register" options={{ headerShown: false }} />
-          <Stack.Screen name="forgotPin" options={{ headerShown: false }} />
-          <Stack.Screen name="resetPassword" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(authentication)"
-            options={{ headerShown: false }}
-          />
-        </Stack>
-      </SafeAreaProvider>
+      </Stack>
     </QueryClientProvider>
   );
 }
