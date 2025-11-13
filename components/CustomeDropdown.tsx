@@ -57,31 +57,38 @@ const CustomeDropdown = ({
     clearSearchInput();
   }, []);
   return (
-    <SafeAreaView style={[globalStyles.container, {}]}>
-      <View style={{ flex: 1, backgroundColor: colors.primary }}>
-        <Pressable
-          onPress={() => setIsOpen(!isOpen)}
-          style={styles.dropdownButton}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
-            {selectedItem && (
-              <View>
-                <Image
-                  source={{ uri: selectedItem.flag }}
-                  contentFit="contain"
-                  contentPosition="center"
-                  style={{ width: 30, height: 50 }}
-                />
-              </View>
-            )}
-            <Text style={styles.selectedValue}>
-              {selectedItem?.name ? selectedItem.name : "Select a Country"}
-            </Text>
-          </View>
-          <Ionicons name="chevron-down" size={20} color="#ccc" />
-        </Pressable>
+    <View style={{ flex: 1, backgroundColor: colors.primary }}>
+      <Pressable
+        onPress={() => setIsOpen(!isOpen)}
+        style={styles.dropdownButton}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+          {selectedItem && (
+            <View>
+              <Image
+                source={{ uri: selectedItem.flag }}
+                contentFit="contain"
+                contentPosition="center"
+                style={{ width: 30, height: 50 }}
+              />
+            </View>
+          )}
+          <Text style={styles.selectedValue}>
+            {selectedItem?.name ? selectedItem.name : "Select a Country"}
+          </Text>
+        </View>
+        <Ionicons name="chevron-down" size={20} color="#ccc" />
+      </Pressable>
 
-        <Modal transparent={false} animationType="slide" visible={isOpen}>
+      <Modal
+        style={{ backgroundColor: colors.primary }}
+        transparent={false}
+        animationType="slide"
+        visible={isOpen}
+      >
+        <SafeAreaView
+          style={[globalStyles.container, { backgroundColor: "red" }]}
+        >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               {/* Search Input */}
@@ -134,9 +141,9 @@ const CustomeDropdown = ({
               />
             </View>
           </View>
-        </Modal>
-      </View>
-    </SafeAreaView>
+        </SafeAreaView>
+      </Modal>
+    </View>
   );
 };
 
@@ -147,10 +154,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "black",
+    backgroundColor: colors.primary,
   },
   modalContent: {
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.primary,
     width: "100%",
     borderRadius: 5,
     padding: 10,
@@ -162,6 +169,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 10,
     height: ms(56),
+    backgroundColor: colors.gray2,
   },
   selectedValue: {
     fontSize: 16,

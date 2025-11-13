@@ -94,15 +94,15 @@ const SelectDropdown = ({ selectedCountry, setSelectedCountry }: pageProps) => {
               style={{ flex: 1 }}
             />
           </View>
+          <CustomDropdown
+            setIsOpen={setIsOpen}
+            isOpen={isOpen}
+            selectedItem={selectedCountry}
+            setSelectedItem={setSelectedCountry}
+            data={countries}
+          />
         </View>
       </View>
-      <CustomDropdown
-        setIsOpen={setIsOpen}
-        isOpen={isOpen}
-        selectedItem={selectedCountry}
-        setSelectedItem={setSelectedCountry}
-        data={countries}
-      />
     </>
   );
 };

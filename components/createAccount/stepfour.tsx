@@ -118,139 +118,137 @@ const StepFour = ({
   };
 
   return (
-    <SafeAreaView style={globalStyles.container}>
-      <CreateContainer
-        heading="Complete Your Profile"
-        text="This helps personalize your experience."
+    <CreateContainer
+      heading="Complete Your Profile"
+      text="This helps personalize your experience."
+    >
+      {AlertComponent}
+      <KeyboardAwareScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          backgroundColor: colors.primary,
+        }}
+        enableOnAndroid={true}
+        extraScrollHeight={20}
       >
-        {AlertComponent}
-        <KeyboardAwareScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            backgroundColor: colors.primary,
-          }}
-          enableOnAndroid={true}
-          extraScrollHeight={20}
-        >
-          <View style={[styles.form, { marginTop: 20, flex: 1 }]}>
-            <View style={{ gap: 10 }}>
-              <Text style={styles.formLabel}>Username</Text>
-              <View style={styles.formContainer}>
-                <View style={styles.formInputContainer}>
-                  <Text
-                    style={{
-                      color: colors.secondary,
-                      fontWeight: 400,
-                      fontSize: ms(14),
-                    }}
-                  >
-                    @
-                  </Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter your username"
-                    placeholderTextColor={colors.secondary}
-                    onChangeText={(e) => setUsername(e)}
-                    onBlur={handleUsername}
-                    onSubmitEditing={handleUsername}
-                    defaultValue={username}
-                    editable={isLoading ? false : true}
-                  />
-                </View>
-                {username != "" && (
-                  <View style={styles.formContainerBottom}>
-                    {isLoading && !userExist ? (
-                      <Spinner width={20} height={20} />
-                    ) : (
-                      <Text
-                        style={{
-                          fontSize: ms(12),
-                          fontWeight: 400,
-                          color: userExist ? "red" : "green",
-                          lineHeight: 20,
-                        }}
-                      >
-                        {userExist ? "Username taken" : "Username available"}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <View style={{ gap: 10 }}>
-              <Text style={styles.formLabel}>Country</Text>
-
-              <SelectDropdown
-                selectedCountry={selectedCountry}
-                setSelectedCountry={setSelectedCountry}
-              />
-            </View>
-
-            <View style={{ gap: 10 }}>
-              <Text style={styles.formLabel}>Phone number</Text>
-              <View
-                style={[
-                  styles.phonenumberContainer,
-                  phoneNumber !== ""
-                    ? !isPhoneValid
-                      ? { borderWidth: 1, borderColor: "red" }
-                      : { borderWidth: 1, borderColor: "green" }
-                    : null,
-                ]}
-              >
-                {selectedCountry?.name && (
-                  <View style={styles.phoneCode}>
-                    <Text style={styles.phoneCodeText}>
-                      {selectedCountry?.phoneCode}
-                    </Text>
-                  </View>
-                )}
-
+        <View style={[styles.form, { marginTop: 20, flex: 1 }]}>
+          <View style={{ gap: 10 }}>
+            <Text style={styles.formLabel}>Username</Text>
+            <View style={styles.formContainer}>
+              <View style={styles.formInputContainer}>
+                <Text
+                  style={{
+                    color: colors.secondary,
+                    fontWeight: 400,
+                    fontSize: ms(14),
+                  }}
+                >
+                  @
+                </Text>
                 <TextInput
-                  placeholder="Enter Phone number"
+                  style={styles.formInput}
+                  placeholder="Enter your username"
                   placeholderTextColor={colors.secondary}
-                  style={[styles.phoneInput]}
-                  keyboardType="phone-pad"
-                  defaultValue={phoneNumber}
-                  onChangeText={(e) => handlePhoneNumber(e)}
-                  editable={selectedCountry?.name == "" ? false : true}
+                  onChangeText={(e) => setUsername(e)}
+                  onBlur={handleUsername}
+                  onSubmitEditing={handleUsername}
+                  defaultValue={username}
+                  editable={isLoading ? false : true}
                 />
               </View>
-            </View>
-
-            <View style={styles.bottomContainer}>
-              <Pressable
-                onPress={handleRegistration}
-                disabled={
-                  !username ||
-                  !selectedCountry?.name ||
-                  !phoneNumber ||
-                  !isPhoneValid ||
-                  regIsLoading
-                }
-                style={[
-                  styles.btn,
-                  !username ||
-                  !selectedCountry?.name ||
-                  !phoneNumber ||
-                  !isPhoneValid ||
-                  regIsLoading
-                    ? { opacity: 0.5 }
-                    : null,
-                ]}
-              >
-                {regIsLoading ? (
-                  <Spinner width={20} height={20} />
-                ) : (
-                  <Text style={styles.btnText}>Continue</Text>
-                )}
-              </Pressable>
+              {username != "" && (
+                <View style={styles.formContainerBottom}>
+                  {isLoading && !userExist ? (
+                    <Spinner width={20} height={20} />
+                  ) : (
+                    <Text
+                      style={{
+                        fontSize: ms(12),
+                        fontWeight: 400,
+                        color: userExist ? "red" : "green",
+                        lineHeight: 20,
+                      }}
+                    >
+                      {userExist ? "Username taken" : "Username available"}
+                    </Text>
+                  )}
+                </View>
+              )}
             </View>
           </View>
-        </KeyboardAwareScrollView>
-      </CreateContainer>
-    </SafeAreaView>
+
+          <View style={{ gap: 10 }}>
+            <Text style={styles.formLabel}>Country</Text>
+
+            <SelectDropdown
+              selectedCountry={selectedCountry}
+              setSelectedCountry={setSelectedCountry}
+            />
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <Text style={styles.formLabel}>Phone number</Text>
+            <View
+              style={[
+                styles.phonenumberContainer,
+                phoneNumber !== ""
+                  ? !isPhoneValid
+                    ? { borderWidth: 1, borderColor: "red" }
+                    : { borderWidth: 1, borderColor: "green" }
+                  : null,
+              ]}
+            >
+              {selectedCountry?.name && (
+                <View style={styles.phoneCode}>
+                  <Text style={styles.phoneCodeText}>
+                    {selectedCountry?.phoneCode}
+                  </Text>
+                </View>
+              )}
+
+              <TextInput
+                placeholder="Enter Phone number"
+                placeholderTextColor={colors.secondary}
+                style={[styles.phoneInput]}
+                keyboardType="phone-pad"
+                defaultValue={phoneNumber}
+                onChangeText={(e) => handlePhoneNumber(e)}
+                editable={selectedCountry?.name == "" ? false : true}
+              />
+            </View>
+          </View>
+
+          <View style={styles.bottomContainer}>
+            <Pressable
+              onPress={handleRegistration}
+              disabled={
+                !username ||
+                !selectedCountry?.name ||
+                !phoneNumber ||
+                !isPhoneValid ||
+                regIsLoading
+              }
+              style={[
+                styles.btn,
+                !username ||
+                !selectedCountry?.name ||
+                !phoneNumber ||
+                !isPhoneValid ||
+                regIsLoading
+                  ? { opacity: 0.5 }
+                  : null,
+              ]}
+            >
+              {regIsLoading ? (
+                <Spinner width={20} height={20} />
+              ) : (
+                <Text style={styles.btnText}>Continue</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAwareScrollView>
+    </CreateContainer>
   );
 };
 
