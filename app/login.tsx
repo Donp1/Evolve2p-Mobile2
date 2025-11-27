@@ -11,8 +11,9 @@ import { globalStyles } from "@/utils/globalStyles";
 import CreateContainer from "@/components/createAccount/CreateContainer";
 import Spinner from "@/components/Spinner";
 import { useAlert } from "@/components/AlertService";
-import { login } from "@/utils/countryStore";
+import { login, updateUser } from "@/utils/countryStore";
 import { setItemAsync } from "expo-secure-store";
+import { useNotification } from "@/context/NotificationContext";
 
 const Login = () => {
   const [passwordIsSecure, setPasswordIsSecure] = useState(true);
@@ -21,6 +22,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { showAlert, AlertComponent } = useAlert();
+
+  const { error, expoPushToken, notification } = useNotification();
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -48,7 +51,12 @@ const Login = () => {
           "authToken",
           JSON.stringify({ token: res?.accessToken })
         );
-        router.push("/securityPin");
+
+        if (expoPushToken) {
+          const setToken = await updateUser({ pushToken: expoPushToken });
+          console.log(setToken);
+          router.push("/securityPin");
+        }
       }
     } catch (error: any) {
       const message =
@@ -91,7 +99,7 @@ const Login = () => {
               <Text style={globalStyles.formLabel}>Email</Text>
               <View style={globalStyles.formInputContainer}>
                 <TextInput
-                  defaultValue={email}
+                  // defaultValue={email}
                   onChangeText={setEmail}
                   placeholder="Enter your email address"
                   style={globalStyles.formInput}
@@ -106,8 +114,8 @@ const Login = () => {
               <Text style={globalStyles.formLabel}>Password</Text>
               <View style={globalStyles.formInputContainer}>
                 <TextInput
-                  defaultValue={password}
-                  onChangeText={(e) => setPassword(e)}
+                  // defaultValue={password}
+                  onChangeText={setPassword}
                   placeholder="Enter your password"
                   style={globalStyles.formInput}
                   secureTextEntry={passwordIsSecure}

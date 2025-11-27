@@ -163,7 +163,7 @@ const StepTwo = ({
                 style={[globalStyles.formInput]}
                 inputMode="text"
                 placeholderTextColor={colors.secondary}
-                defaultValue={password}
+                // defaultValue={password}
                 onChangeText={(e) => setPassword(e)}
                 secureTextEntry={passwordIsSecure}
               />
@@ -217,7 +217,7 @@ const StepTwo = ({
                 style={globalStyles.formInput}
                 inputMode="text"
                 placeholderTextColor={colors.secondary}
-                defaultValue={confirmPassword}
+                // defaultValue={confirmPassword}
                 onChangeText={(e) => setConfirmPassword(e)}
                 secureTextEntry={confirmPasswordIsSecure}
               />

@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { ms } from "react-native-size-matters";
 import Switch from "@/components/Switch";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAlert } from "@/components/AlertService";
 
 const goBack = () => {
   if (router.canGoBack()) router.back();
@@ -25,10 +26,28 @@ const Notification = () => {
   const [txAlertEmail, setTxAlertEmail] = useState<boolean>(false);
   const [txAlertPush, setTxAlertPush] = useState<boolean>(false);
 
-  const handleUpdate = async () => {};
+  const { AlertComponent, showAlert } = useAlert();
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  const handleUpdate = async () => {
+    setLoading(true);
+
+    await sleep(2000); // wait 5 seconds
+
+    setLoading(false);
+    showAlert(
+      "Success",
+      "Settings updated successfully",
+      [{ text: "Ok", onPress() {} }],
+      "success"
+    );
+  };
 
   return (
     <SafeAreaView style={globalStyles.container}>
+      {AlertComponent}
       <View style={globalStyles.topBar}>
         <Pressable
           onPress={goBack}
@@ -51,7 +70,7 @@ const Notification = () => {
             Notification
           </Text>
         </Pressable>
-        {/* {loading ? (
+        {loading ? (
           <View style={{ paddingHorizontal: 15 }}>
             <ActivityIndicator size="large" color="#4caf50" />
           </View>
@@ -68,7 +87,7 @@ const Notification = () => {
               Save
             </Text>
           </Pressable>
-        )} */}
+        )}
       </View>
 
       <ScrollView

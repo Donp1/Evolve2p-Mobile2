@@ -38,6 +38,7 @@ import PreferedCurrency, {
 } from "@/components/PreferedCurrency";
 import { useUserStore } from "@/store/userStore";
 import { useAlert } from "@/components/AlertService";
+import { reload } from "expo-router/build/global-state/routing";
 
 const Market = () => {
   const coins = useCoinStore((state) => state.coins);
@@ -52,12 +53,14 @@ const Market = () => {
   const [selectedCurrency, setSelectedCurrency] =
     useState<SelectedCurrency | null>(null);
   const [filterPayments, setFilterPayments] = useState<PaymentMethod[]>([]);
+  const [reloadCount, setReloadCount] = useState(0);
 
   const { offers, loading: offerLoading } = useOffers({
-    type: section,
+    type: section.toUpperCase(),
     crypto: activeTopCoin?.symbol,
     paymentMethod: filterPayments.map((pm) => pm.id),
     currency: selectedCurrency?.code || "USD",
+    reload: reloadCount,
   });
 
   const user = useUserStore((state: any) => state.user);
@@ -96,9 +99,10 @@ const Market = () => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     // simulate fetching data from API
+    setReloadCount((prev) => prev + 1);
     setTimeout(() => {
       setRefreshing(false);
-    }, 1500);
+    }, 1000);
   }, []);
 
   return (
@@ -159,13 +163,33 @@ const Market = () => {
                 ))}
               </View>
 
-              <Pressable style={[styles.notiContainer, styles.rowCenter]}>
+              <Pressable
+                onPress={() => setPreferedCoinVisible((c) => !c)}
+                style={styles.currencySelector}
+              >
+                {selectedCurrency?.flag && (
+                  <Image
+                    source={{ uri: selectedCurrency.flag }}
+                    style={styles.flagIcon}
+                  />
+                )}
+                <Text style={styles.currencyCode}>
+                  {selectedCurrency?.code?.toUpperCase() ?? "USD"}
+                </Text>
+                <FontAwesome
+                  name="chevron-down"
+                  size={ms(12)}
+                  color={colors.secondary}
+                />
+              </Pressable>
+
+              {/* <Pressable style={[styles.notiContainer, styles.rowCenter]}>
                 <Ionicons
                   name="reload"
                   size={ms(17)}
                   color={colors.secondary}
                 />
-              </Pressable>
+              </Pressable> */}
             </View>
 
             {/* Filters */}
@@ -206,19 +230,20 @@ const Market = () => {
                 </View>
               </Pressable>
 
-              <Pressable style={styles.notiContainer}>
+              {/* <Pressable style={styles.notiContainer}>
                 <AntDesign
                   name="filter"
                   size={ms(17)}
                   color={colors.secondary}
                 />
-              </Pressable>
+              </Pressable> */}
             </View>
 
             {/* Amount Input */}
             {/* <View style={styles.amountInputContainer}>
+              
               <TextInput
-                style={styles.amountInput}`
+                style={styles.amountInput}
                 placeholder={`Enter ${selectedCurrency?.code ?? "USD"} Amount`}
                 placeholderTextColor={colors.secondary}
                 keyboardType="numeric"

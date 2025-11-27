@@ -23,7 +23,7 @@ import { useAlert } from "@/components/AlertService";
 import { checkEmailExist, sendOtp } from "@/utils/countryStore";
 import Spinner from "@/components/Spinner";
 
-export default function ResetPassword(){
+export default function ResetPassword() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -98,7 +98,7 @@ export default function ResetPassword(){
                   style={globalStyles.formInput}
                   inputMode="email"
                   placeholderTextColor={colors.secondary}
-                  defaultValue={email}
+                  // defaultValue={email}
                   onChangeText={(e) => setEmail(e)}
                 />
               </View>
@@ -167,7 +167,6 @@ export default function ResetPassword(){
       )}
     </SafeAreaView>
   );
-};
-
+}
 
 const styles = StyleSheet.create({});

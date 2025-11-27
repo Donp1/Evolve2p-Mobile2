@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#000000"
       },
-      "package": "com.donflexy.Evove2p"
+      "package": "com.Evolve2p",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -55,13 +56,15 @@
         "origin": false
       },
       "eas": {
-        "projectId": "4f651417-f1c6-4705-9726-52a2d2acb140"
+        "projectId": "fe648edc-2920-4da5-8403-0c5a290a348b"
       }
     },
-    "owner": "donflexy",
-    "runtimeVersion": "1.0.0",
+    "owner": "jptech78789898",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "updates": {
-      "url": "https://u.expo.dev/4f651417-f1c6-4705-9726-52a2d2acb140",
+      "url": "https://u.expo.dev/fe648edc-2920-4da5-8403-0c5a290a348b",
       "fallbackToCacheTimeout": 0,
       "enabled": true
     }

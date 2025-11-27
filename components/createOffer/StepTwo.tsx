@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import React, { Dispatch, SetStateAction, useCallback, useMemo } from "react";
 import { colors } from "@/constants";
-import { ms } from "react-native-size-matters";
+import { ms, vs } from "react-native-size-matters";
 import { globalStyles } from "@/utils/globalStyles";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { SelectedCurrency } from "../PreferedCurrency";
@@ -37,17 +37,6 @@ const StepTwo: React.FC<StepTwoProps> = ({
   setCompletedSteps,
   setActiveTab,
 }) => {
-  const handleChange = useCallback(
-    (text: string) => {
-      const num = parseFloat(text.replace(/[^0-9.-]/g, "")); // strip invalid chars
-      if (isNaN(num)) return;
-
-      // Clamp value
-      setMargin(Math.min(Math.max(num, MIN_MARGIN), MAX_MARGIN));
-    },
-    [setMargin]
-  );
-
   const handlePress = useCallback(() => {
     if (margin && min && max) {
       setCompletedSteps((prev) => [...prev, "step-two"]);
@@ -55,13 +44,17 @@ const StepTwo: React.FC<StepTwoProps> = ({
     }
   }, [margin, min, max, setCompletedSteps, setActiveTab]);
 
-  const isButtonDisabled = useMemo(() => !margin || !min || !max, [margin, min, max]);
+  const isButtonDisabled = useMemo(
+    () => !margin || !min || !max,
+    [margin, min, max]
+  );
 
   return (
     <>
       <View style={{ marginTop: 20 }}>
         <Text style={styles.subHeader}>
-          Select the asset to trade, your payment method, and the payment time frame.
+          Select the asset to trade, your payment method, and the payment time
+          frame.
         </Text>
       </View>
 
@@ -71,8 +64,8 @@ const StepTwo: React.FC<StepTwoProps> = ({
         <View style={[globalStyles.sectionBox, { backgroundColor: "#222222" }]}>
           <View style={[globalStyles.sectionMain, { paddingVertical: 5 }]}>
             <TextInput
-              value={String(margin)}
-              onChangeText={handleChange}
+              // value={String(margin)}
+              onChangeText={(e) => setMargin(Number(e))}
               style={styles.input}
               placeholder="Enter margin"
               placeholderTextColor={colors.white2}
@@ -93,16 +86,36 @@ const StepTwo: React.FC<StepTwoProps> = ({
         <InfoRow label="Fee" value="1%" />
         <InfoRow
           label="Market Rate"
-          value={<CryptoPriceWithMargin coin={activeOfferCoin.symbol?.toUpperCase()} margin={0} />}
+          value={
+            <CryptoPriceWithMargin
+              coin={activeOfferCoin.symbol?.toUpperCase()}
+              margin={0}
+            />
+          }
         />
         <InfoRow
           label="Your Rate"
-          value={<CryptoPriceWithMargin coin={activeOfferCoin.symbol?.toUpperCase()} margin={margin} />}
+          value={
+            <CryptoPriceWithMargin
+              coin={activeOfferCoin.symbol?.toUpperCase()}
+              margin={margin}
+            />
+          }
         />
 
-        {margin === 0 && <HelperText text="*You will sell at the market price" />}
-        {margin > 0 && <HelperText text={`*You will make a profit of ${margin}% on every trade`} />}
-        {margin < 0 && <HelperText text={`*You will lose ${Math.abs(margin)}% on every trade`} />}
+        {margin === 0 && (
+          <HelperText text="*You will sell at the market price" />
+        )}
+        {margin > 0 && (
+          <HelperText
+            text={`*You will make a profit of ${margin}% on every trade`}
+          />
+        )}
+        {margin < 0 && (
+          <HelperText
+            text={`*You will lose ${Math.abs(margin)}% on every trade`}
+          />
+        )}
       </View>
 
       <View style={globalStyles.divider} />
@@ -111,32 +124,77 @@ const StepTwo: React.FC<StepTwoProps> = ({
       <View style={{ marginTop: 20 }}>
         <Text style={styles.subHeader}>Order limit</Text>
         <View style={styles.orderLimitRow}>
-          <LimitInput
-            label={selectedCurrency?.symbol?.toUpperCase()}
-            value={min}
-            onChange={(val) => setMin(val)}
-            currency={selectedCurrency?.code}
-            coin={activeOfferCoin.symbol}
-            placeholder="min"
-          />
+          <View style={styles.orderLimitContainer}>
+            <Text
+              style={{
+                fontSize: ms(14),
+                fontWeight: "bold",
+                color: colors.secondary,
+              }}
+            >
+              {selectedCurrency?.symbol?.toUpperCase()}
+            </Text>
+            <TextInput
+              style={styles.orderLimitInput}
+              // label={selectedCurrency?.symbol?.toUpperCase()}
+              // value={String(min)}
+              onChangeText={(val) => setMin(Number(val))}
+              // currency={selectedCurrency?.code}
+              // coin={activeOfferCoin.symbol}
+              placeholder="0"
+              placeholderTextColor={colors.secondary}
+              keyboardType="numeric"
+            />
+            <Text
+              style={{
+                fontSize: ms(14),
+                fontWeight: "bold",
+                color: colors.secondary,
+              }}
+            >
+              Min
+            </Text>
+          </View>
+
           <View style={styles.arrow}>
             <AntDesign name="arrow-right" size={15} color="black" />
           </View>
-          <LimitInput
-            label={selectedCurrency?.symbol?.toUpperCase()}
-            value={max}
-            onChange={(val) => setMax(val)}
-            currency={selectedCurrency?.code}
-            coin={activeOfferCoin.symbol}
-            placeholder="max"
-          />
+          <View style={styles.orderLimitContainer}>
+            <Text
+              style={{
+                fontSize: ms(14),
+                fontWeight: "bold",
+                color: colors.secondary,
+              }}
+            >
+              {selectedCurrency?.symbol?.toUpperCase()}
+            </Text>
+            <TextInput
+              style={styles.orderLimitInput}
+              onChangeText={(val) => setMax(Number(val))}
+              placeholder="0"
+              placeholderTextColor={colors.secondary}
+              keyboardType="numeric"
+            />
+            <Text
+              style={{
+                fontSize: ms(14),
+                fontWeight: "bold",
+                color: colors.secondary,
+              }}
+            >
+              Max
+            </Text>
+          </View>
         </View>
       </View>
 
       {/* Read Guide */}
       <Pressable style={styles.readGuide}>
         <MaterialIcons name="menu-book" size={ms(16)} color={colors.accent} />
-        <Text style={styles.readGuideText}>Read our guide for creating crypto</Text>
+        <Text style={styles.readGuideText}>
+          Read our guide for creating crypto
+        </Text>
       </Pressable>
 
       {/* Continue Button */}
@@ -158,57 +216,26 @@ const StepTwo: React.FC<StepTwoProps> = ({
 export default StepTwo;
 
 /* ------------------------- Helper Components ------------------------- */
-const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+const InfoRow = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
   <View style={styles.infoRow}>
     <Text style={styles.subHeader}>{label}</Text>
-    {typeof value === "string" ? <Text style={styles.subHeader}>{value}</Text> : value}
+    {typeof value === "string" ? (
+      <Text style={styles.subHeader}>{value}</Text>
+    ) : (
+      value
+    )}
   </View>
 );
 
 const HelperText = ({ text }: { text: string }) => (
   <Text style={styles.helperText}>{text}</Text>
 );
-
-const LimitInput = ({
-  label,
-  value,
-  onChange,
-  currency,
-  coin,
-  placeholder,
-}: {
-  label?: string;
-  value: number;
-  onChange: (val: number) => void;
-  currency?: string;
-  coin?: string;
-  placeholder: string;
-}) => {
-  const handleChange = (text: string) => {
-    const num = parseFloat(text.replace(/[^0-9.-]/g, ""));
-    if (!isNaN(num)) onChange(num);
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={[globalStyles.sectionBox, { backgroundColor: "#222222" }]}>
-        <View style={[globalStyles.sectionMain, { paddingVertical: 5 }]}>
-          <Text style={styles.inputLabel}>{label}</Text>
-          <TextInput
-            value={String(value)}
-            onChangeText={handleChange}
-            style={styles.input}
-            placeholder={placeholder}
-            placeholderTextColor={colors.white2}
-            keyboardType="numeric"
-          />
-          <Text style={styles.inputLabel}>{currency?.toUpperCase() || "USD"}</Text>
-        </View>
-      </View>
-      <CryptoConverter amount={value} coin={coin || "BTC"} currency={currency || "USD"} />
-    </View>
-  );
-};
 
 /* ------------------------- Styles ------------------------- */
 const styles = StyleSheet.create({
@@ -284,5 +311,22 @@ const styles = StyleSheet.create({
     fontSize: ms(14),
     fontWeight: "700",
     color: colors.accent,
+  },
+  orderLimitContainer: {
+    flexDirection: "row",
+    flex: 1,
+    backgroundColor: colors.gray2,
+    overflow: "hidden",
+    borderRadius: 5,
+    height: vs(50),
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 5,
+  },
+  orderLimitInput: {
+    flex: 1,
+    color: colors.secondary,
+    fontWeight: "bold",
+    fontSize: ms(14),
   },
 });

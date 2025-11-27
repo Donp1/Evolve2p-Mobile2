@@ -23,59 +23,61 @@ const CoinBottomSheet = ({
   const coins = useCoinStore((state) => state.coins);
   return (
     <BottomSheet setVisible={setVisible} visible={visible} height={height}>
-      <Text
-        style={{
-          fontWeight: 500,
-          fontSize: ms(16),
-          lineHeight: 28,
-          color: colors.white,
-          marginTop: 20,
-        }}
-      >
-        Select a Coin
-      </Text>
-      {coins.map((coin, index) => (
-        <Pressable
-          onPress={() => {
-            setVisible(false);
-            setSelectedCoin(coin);
+      <View style={{ paddingHorizontal: 10 }}>
+        <Text
+          style={{
+            fontWeight: 500,
+            fontSize: ms(16),
+            lineHeight: 28,
+            color: colors.white,
+            marginTop: 20,
           }}
-          key={index}
-          style={styles.coinContainer}
         >
-          <View
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
+          Select a Coin
+        </Text>
+        {coins.map((coin, index) => (
+          <Pressable
+            onPress={() => {
+              setVisible(false);
+              setSelectedCoin(coin);
             }}
+            key={index}
+            style={styles.coinContainer}
           >
-            <Image
-              source={{ uri: coin.image }}
-              style={{ width: ms(30), height: ms(30) }}
-              contentFit="contain"
-              transition={1000}
-            />
-            <View>
-              <Text
-                style={{
-                  color: colors.white2,
-                  fontSize: ms(14),
-                  fontWeight: 700,
-                }}
-              >
-                {coin.name}
-              </Text>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <Image
+                source={{ uri: coin.image }}
+                style={{ width: ms(30), height: ms(30) }}
+                contentFit="contain"
+                transition={1000}
+              />
+              <View>
+                <Text
+                  style={{
+                    color: colors.white2,
+                    fontSize: ms(14),
+                    fontWeight: 700,
+                  }}
+                >
+                  {coin.name}
+                </Text>
+              </View>
             </View>
-          </View>
-          <FontAwesome
-            name="chevron-right"
-            size={ms(16)}
-            color={colors.white}
-          />
-        </Pressable>
-      ))}
+            <FontAwesome
+              name="chevron-right"
+              size={ms(16)}
+              color={colors.white}
+            />
+          </Pressable>
+        ))}
+      </View>
     </BottomSheet>
   );
 };

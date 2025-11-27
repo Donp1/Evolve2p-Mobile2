@@ -20,7 +20,12 @@ import StepOne from "@/components/createAccount/stepone";
 import StepTwo from "@/components/createAccount/steptwo";
 import StepThree from "@/components/createAccount/stepthree";
 import StepFour from "@/components/createAccount/stepfour";
-import { checkToken, createUser, getUser } from "@/utils/countryStore";
+import {
+  checkToken,
+  createUser,
+  getUser,
+  updateUser,
+} from "@/utils/countryStore";
 import StepFive from "@/components/createAccount/stepfive";
 import StepSix from "@/components/createAccount/stepsix";
 import { useAlert } from "@/components/AlertService";
@@ -28,6 +33,7 @@ import { CountryDataProp } from "@/context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { globalStyles } from "@/utils/globalStyles";
 import { set } from "lodash";
+import { useNotification } from "@/context/NotificationContext";
 
 const Register = () => {
   const goBack = () => {
@@ -47,6 +53,8 @@ const Register = () => {
 
   const { AlertComponent, showAlert } = useAlert();
 
+  const { expoPushToken } = useNotification();
+
   const handlFinalRegistration = async () => {
     setRegIsLoading(true);
     try {
@@ -64,6 +72,9 @@ const Register = () => {
           "authToken",
           JSON.stringify({ token: res?.accessToken })
         );
+
+        if (expoPushToken) await updateUser({ pushToken: expoPushToken });
+
         showAlert(
           "Congratulations!!!",
           "User registered successfully",

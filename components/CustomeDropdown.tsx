@@ -86,9 +86,7 @@ const CustomeDropdown = ({
         animationType="slide"
         visible={isOpen}
       >
-        <SafeAreaView
-          style={[globalStyles.container, { backgroundColor: "red" }]}
-        >
+        <SafeAreaView style={[globalStyles.container, {}]}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               {/* Search Input */}

@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   View,
+  RefreshControl,
 } from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
@@ -141,6 +142,8 @@ const Trade = () => {
   const [cryptoValue, setCryptoValue] = useState<number>(0);
   const [conversionAmount, setConversionAmount] = useState<number>(0.0);
   const [isCreating, setIsCreating] = useState(false);
+  const [refresh, setRefresh] = useState<number>(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   const coins = useCoinStore((state) => state.coins);
   const currentCoin = coins.find(
@@ -234,7 +237,7 @@ const Trade = () => {
 
     if (createTradeRes?.success) {
       showAlert(
-        "Successfull!!!",
+        "Success",
         createTradeRes?.message,
         [
           {
@@ -252,6 +255,11 @@ const Trade = () => {
         "success"
       );
     }
+  };
+
+  const onRefresh = () => {
+    setRefresh((p) => p + 1);
+    setRefreshing(false);
   };
 
   // ✅ Call conversion whenever fiatAmount changes
@@ -315,6 +323,9 @@ const Trade = () => {
                 flexGrow: 1,
                 paddingHorizontal: 10,
               }}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
             >
               <View
                 style={[
@@ -365,6 +376,7 @@ const Trade = () => {
                           fontWeight: 500,
                           fontSize: ms(14),
                         }}
+                        refresh={refresh}
                       />
                     </View>
                     <View
@@ -431,7 +443,9 @@ const Trade = () => {
                 >
                   <TextInput
                     keyboardType="numeric"
-                    defaultValue={conversionAmount.toString()}
+                    // defaultValue={conversionAmount.toString()}
+                    placeholder="0"
+                    placeholderTextColor={colors.gray4}
                     onChangeText={(e) => setConversionAmount(Number(e))}
                     style={{
                       fontSize: ms(24),
@@ -521,6 +535,7 @@ const Trade = () => {
                           fontWeight: 500,
                           color: colors.secondary,
                         }}
+                        refresh={refresh}
                       />
                     </View>
                   </View>
