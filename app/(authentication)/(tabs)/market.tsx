@@ -57,9 +57,9 @@ const Market = () => {
 
   const { offers, loading: offerLoading } = useOffers({
     type: section.toUpperCase(),
-    crypto: activeTopCoin?.symbol,
+    crypto: activeTopCoin?.symbol?.toUpperCase(),
     paymentMethod: filterPayments.map((pm) => pm.id),
-    currency: selectedCurrency?.code || "USD",
+    currency: selectedCurrency?.code?.toUpperCase() || "USD",
     reload: reloadCount,
   });
 

@@ -1,5 +1,19 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import React, { Dispatch, SetStateAction, useCallback, useMemo } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { colors } from "@/constants";
 import { ms, vs } from "react-native-size-matters";
 import { globalStyles } from "@/utils/globalStyles";
@@ -8,6 +22,9 @@ import { SelectedCurrency } from "../PreferedCurrency";
 import { CoinData } from "@/context";
 import CryptoConverter from "../CurrencyPriceAmount";
 import CryptoPriceWithMargin from "../CryptoPriceWithMargin ";
+import { base_url, priceFormater } from "@/utils/countryStore";
+import { useAlert } from "../AlertService";
+import Spinner from "../Spinner";
 
 interface StepTwoProps {
   margin: number;
@@ -44,6 +61,43 @@ const StepTwo: React.FC<StepTwoProps> = ({
     }
   }, [margin, min, max, setCompletedSteps, setActiveTab]);
 
+  const { AlertComponent, showAlert } = useAlert();
+  const [prices, setPrices] = useState(null);
+  const [loadingPrices, setLoadingPrices] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingPrices(true);
+        const url =
+          base_url + "/api/get-prices/" + selectedCurrency?.code?.toUpperCase();
+
+        const res = await fetch(url);
+
+        const data = await res.json();
+
+        if (data?.error) {
+          showAlert(
+            "Error",
+            data?.message,
+            [{ text: "Close", onPress() {} }],
+            "error"
+          );
+          setLoadingPrices(false);
+          return;
+        }
+
+        if (data?.success) {
+          setPrices(data?.prices);
+          setLoadingPrices(false);
+        }
+      } catch (error) {
+        console.log("Error loading prices: ", error);
+        setLoadingPrices(false);
+      }
+    })();
+  }, []);
+
   const isButtonDisabled = useMemo(
     () => !margin || !min || !max,
     [margin, min, max]
@@ -51,6 +105,7 @@ const StepTwo: React.FC<StepTwoProps> = ({
 
   return (
     <>
+      {AlertComponent}
       <View style={{ marginTop: 20 }}>
         <Text style={styles.subHeader}>
           Select the asset to trade, your payment method, and the payment time
@@ -87,19 +142,42 @@ const StepTwo: React.FC<StepTwoProps> = ({
         <InfoRow
           label="Market Rate"
           value={
-            <CryptoPriceWithMargin
-              coin={activeOfferCoin.symbol?.toUpperCase()}
-              margin={0}
-            />
+            loadingPrices ? (
+              <ActivityIndicator color={colors.gray4} />
+            ) : (
+              <Text style={[styles.subHeader]}>
+                {selectedCurrency?.symbol}
+                {priceFormater(
+                  Number(
+                    prices?.[activeOfferCoin.symbol?.toUpperCase() ?? ""]?.[
+                      selectedCurrency?.code?.toUpperCase() ?? ""
+                    ] ?? "N/A"
+                  ),
+                  { style: "short" }
+                )}
+              </Text>
+            )
           }
         />
         <InfoRow
           label="Your Rate"
           value={
-            <CryptoPriceWithMargin
-              coin={activeOfferCoin.symbol?.toUpperCase()}
-              margin={margin}
-            />
+            loadingPrices ? (
+              <ActivityIndicator color={colors.gray4} />
+            ) : (
+              <Text style={[styles.subHeader]}>
+                {selectedCurrency?.symbol}
+                {priceFormater(
+                  Number(
+                    prices?.[activeOfferCoin.symbol?.toUpperCase() ?? ""]?.[
+                      selectedCurrency?.code?.toUpperCase() ?? ""
+                    ] ?? "N/A"
+                  ) *
+                    (1 + margin / 100),
+                  { style: "short" }
+                )}
+              </Text>
+            )
           }
         />
 

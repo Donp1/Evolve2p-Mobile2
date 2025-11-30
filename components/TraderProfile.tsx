@@ -620,7 +620,11 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                             trade?.offer?.crypto?.toUpperCase() == "BTC" &&
                             trade?.status == "COMPLETED"
                         )
-                        .reduce((acc, t) => acc + t.amountCrypto, 0)}{" "}
+                        .reduce(
+                          (acc, t) =>
+                            Number(Number(acc + t.amountCrypto).toFixed(6)),
+                          0
+                        )}{" "}
                       {btcDetails?.symbol?.toUpperCase()}
                     </Text>
                   </View>
@@ -663,7 +667,11 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                             trade?.offer?.crypto?.toUpperCase() == "ETH" &&
                             trade?.status == "COMPLETED"
                         )
-                        .reduce((acc, t) => acc + t.amountCrypto, 0)}{" "}
+                        .reduce(
+                          (acc, t) =>
+                            Number(Number(acc + t.amountCrypto).toFixed(6)),
+                          0
+                        )}{" "}
                       {ethDetails?.symbol?.toUpperCase()}
                     </Text>
                   </View>
@@ -706,7 +714,11 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                             trade?.offer?.crypto?.toUpperCase() == "USDT" &&
                             trade?.status == "COMPLETED"
                         )
-                        .reduce((acc, t) => acc + t.amountCrypto, 0)}{" "}
+                        .reduce(
+                          (acc, t) =>
+                            Number(Number(acc + t.amountCrypto).toFixed(6)),
+                          0
+                        )}{" "}
                       {usdtDetails?.symbol?.toUpperCase()}
                     </Text>
                   </View>
@@ -749,7 +761,11 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                             trade?.offer?.crypto?.toUpperCase() == "USDC" &&
                             trade?.status == "COMPLETED"
                         )
-                        .reduce((acc, t) => acc + t.amountCrypto, 0)}{" "}
+                        .reduce(
+                          (acc, t) =>
+                            Number(Number(acc + t.amountCrypto).toFixed(6)),
+                          0
+                        )}{" "}
                       {usdcDetails?.symbol?.toUpperCase()}
                     </Text>
                   </View>

@@ -52,6 +52,8 @@ export const useOffers = (params?: Params) => {
     const fetchOffers = async () => {
       try {
         setLoading(true);
+        // const data = await getOffers();
+
         const data = await getOffers(params);
         if (isMounted) {
           setOffers(data);

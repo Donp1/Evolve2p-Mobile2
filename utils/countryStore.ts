@@ -32,7 +32,7 @@ export function formatSecretWithDashes(
   );
 }
 
-const base_url = "https://evolve2p-backend.onrender.com";
+export const base_url = "https://evolve2p-backend.onrender.com";
 
 export const sendOtp = async (email: string) => {
   try {

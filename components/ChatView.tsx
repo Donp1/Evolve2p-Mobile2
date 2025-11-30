@@ -456,10 +456,7 @@ const ChatView = ({
                 )
                 .map((message: any) => {
                   // System message
-                  if (
-                    (message.type === "SYSTEM" || message.type === "SUPPORT") &&
-                    !message.senderId
-                  ) {
+                  if (message.type === "SYSTEM" && !message.senderId) {
                     return (
                       <View
                         key={message.id}
@@ -475,12 +472,7 @@ const ChatView = ({
                           <Text
                             style={{ color: colors.accent, fontWeight: "500" }}
                           >
-                            {message.type === "SYSTEM"
-                              ? "Service message"
-                              : null}
-                            {message.type === "SUPPORT"
-                              ? "Customer Support"
-                              : null}
+                            Service message
                           </Text>
                           <Text
                             style={{ color: colors.gray4, fontSize: ms(12) }}
@@ -489,6 +481,43 @@ const ChatView = ({
                           </Text>
                         </View>
                         <View style={styles.serviceMessageContainer}>
+                          <Text style={styles.serviceMessageText}>
+                            {message.content}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  }
+
+                  // Support Messages
+                  if (message.type === "SUPPORT" && !message.senderId) {
+                    return (
+                      <View
+                        key={message.id}
+                        style={{ marginVertical: 10, alignItems: "center" }}
+                      >
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            width: "100%",
+                          }}
+                        >
+                          <Text style={{ color: "#D1D5DB", fontWeight: "500" }}>
+                            Customer Support
+                          </Text>
+                          <Text
+                            style={{ color: colors.gray4, fontSize: ms(12) }}
+                          >
+                            {formatDateTime(message?.createdAt)}
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.serviceMessageContainer,
+                            { borderColor: "#F3F4F6" },
+                          ]}
+                        >
                           <Text style={styles.serviceMessageText}>
                             {message.content}
                           </Text>
