@@ -595,7 +595,7 @@ const StepTwo = ({
         {/* Dispute Button */}
         {currentTrade?.status !== "DISPUTED" && (
           <Pressable
-            // disabled={!isExpired}
+            disabled={!isExpired}
             onPress={() => setIsOpenDispute(true)}
             style={[
               globalStyles.btn,
