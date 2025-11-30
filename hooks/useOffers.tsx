@@ -12,6 +12,8 @@ export interface Offer {
   status: string;
   time: number;
   createdAt: string;
+  basePrice: number;
+  finalPrice: number;
   user: {
     id: string;
     username: string;

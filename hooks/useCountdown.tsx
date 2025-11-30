@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 
-export function useCountdown(expiration: string | Date) {
-  const targetTime = new Date(expiration).getTime();
+export function useCountdown(
+  expiration: string | Date,
+  minutesToWait?: number // optional
+) {
+  // Convert expiration time
+  const baseTime = new Date(expiration).getTime();
+
+  // If minutesToWait exists, add it to expiration time
+  const targetTime = minutesToWait
+    ? baseTime + minutesToWait * 60 * 1000
+    : baseTime;
 
   const calculateTimeLeft = () => {
     const diff = targetTime - Date.now();
@@ -16,7 +25,7 @@ export function useCountdown(expiration: string | Date) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [expiration]);
+  }, [expiration, minutesToWait]);
 
   const minutes = Math.floor(timeLeft / 1000 / 60);
   const seconds = Math.floor((timeLeft / 1000) % 60);

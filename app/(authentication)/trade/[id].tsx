@@ -27,6 +27,7 @@ import { Image } from "expo-image";
 import {
   convertCurrencyToCrypto,
   createTrade,
+  formatNumber,
   priceFormater,
 } from "@/utils/countryStore";
 import Spinner from "@/components/Spinner";
@@ -35,6 +36,7 @@ import { debounce, isArray } from "lodash";
 import { useAlert } from "@/components/AlertService";
 import ChatView from "@/components/ChatView";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useCountryStore } from "@/store/countryStore";
 
 const goBack = () => {
   if (router.canGoBack()) router.back();
@@ -68,6 +70,8 @@ interface offerType {
   createdAt: string;
   user: User;
   paymentMethod: PaymentMethod;
+  basePrice: number;
+  finalPrice: number;
 }
 
 interface Country {
@@ -84,52 +88,6 @@ interface SelectedCurrency {
   symbol: string;
   flag: string;
 }
-
-const fetchCurrencyDetails = async (
-  currencyCode: string
-): Promise<SelectedCurrency | null> => {
-  try {
-    const res = await fetch(
-      "https://restcountries.com/v3.1/all?fields=name,flags,currencies,cca2"
-    );
-    const data: Country[] = await res.json();
-    const withCurrency = data.filter((c) => c.currencies);
-
-    const code = currencyCode.toUpperCase();
-
-    // special case: USD → always pick United States
-    if (code === "USD") {
-      const usa = withCurrency.find(
-        (c) => c.cca2 === "US" && c.currencies?.USD
-      );
-      if (usa?.currencies?.USD) {
-        return {
-          code: "USD",
-          name: usa.currencies.USD.name,
-          symbol: usa.currencies.USD.symbol,
-          flag: usa.flags.png,
-        };
-      }
-    }
-
-    // otherwise: find first country with that currency
-    const country = withCurrency.find((c) => c.currencies?.[code]);
-
-    if (country?.currencies?.[code]) {
-      return {
-        code,
-        name: country.currencies[code].name,
-        symbol: country.currencies[code].symbol,
-        flag: country.flags.png,
-      };
-    }
-
-    return null;
-  } catch (e) {
-    console.error("Error fetching currency details:", e);
-    return null;
-  }
-};
 
 const Trade = () => {
   const { id: offerId } = useLocalSearchParams();
@@ -149,7 +107,58 @@ const Trade = () => {
   const currentCoin = coins.find(
     (coin) => coin.symbol?.toUpperCase() == currentOffer?.crypto?.toUpperCase()
   );
+
+  const {
+    countries,
+    error,
+    loading: currenciesLoading,
+    fetchCurrencyDetails,
+  } = useCountryStore();
   const { AlertComponent, showAlert } = useAlert();
+
+  // const fetchCurrencyDetails = async (
+  //   currencyCode: string
+  // ): Promise<SelectedCurrency | null> => {
+  //   try {
+  //     const data = countries;
+  //     // console.log(countries[0]);
+  //     const withCurrency = data.filter((c) => c.currencies);
+
+  //     const code = currencyCode?.toUpperCase();
+
+  //     // special case: USD → always pick United States
+  //     if (code === "USD") {
+  //       const usa = withCurrency.find(
+  //         (c) => c.cca2 === "US" && c.currencies?.USD
+  //       );
+  //       if (usa?.currencies?.USD) {
+  //         return {
+  //           code: "USD",
+  //           name: usa.currencies.USD.name,
+  //           symbol: usa.currencies.USD.symbol,
+  //           flag: usa.flags.png,
+  //         };
+  //       }
+  //     }
+
+  //     // otherwise: find first country with that currency
+  //     const country = withCurrency.find((c) => c.currencies?.[code]);
+
+  //     if (country?.currencies?.[code]) {
+  //       return {
+  //         code,
+  //         name: country.currencies[code].name,
+  //         symbol: country.currencies[code].symbol,
+  //         flag: country.flags.png,
+  //       };
+  //     }
+
+  //     return null;
+  //   } catch (e) {
+  //     console.error("Error fetching currency details:", e);
+  //     return null;
+  //   }
+  // };
 
   useEffect(() => {
     const fetchOffer = async () => {
@@ -159,9 +168,11 @@ const Trade = () => {
           `https://evolve2p-backend.onrender.com/api/get-offer/${offerId}`
         );
         if (!res.ok) throw new Error("Failed to fetch offer");
-        const data: offerType = await res.json();
-        setCurrentOffer(data);
-        const lable = data?.type?.toLowerCase() === "sell" ? "Buy" : "Sell";
+        const data = await res.json();
+
+        setCurrentOffer(data?.offer);
+        const lable =
+          data?.offer?.type?.toLowerCase() === "sell" ? "Buy" : "Sell";
         setActionLabel(lable);
       } catch (err: any) {
         console.log(err);
@@ -176,40 +187,25 @@ const Trade = () => {
   useEffect(() => {
     (async () => {
       if (!currentOffer) return;
-      setLoadingCurrency(true);
+
       const details = await fetchCurrencyDetails(
-        currentOffer?.currency.toUpperCase() || "USD"
+        currentOffer?.currency?.toUpperCase() || "USD"
       );
+
       setLoadingCurrency(false);
       if (details) setCurrencyDetails(details);
     })();
-  }, [currentOffer]);
+  }, [offerId, currentOffer]);
 
-  const handleConversion = useCallback(
-    debounce(async (value: string) => {
-      if (!value || isNaN(Number(value))) {
-        setCryptoValue(0);
-        return;
-      }
+  const handleConversion = async (value: string) => {
+    if (Number(value) > 0 && value != "" && !isNaN(Number(value))) {
+      const result = Number(value) / Number(currentOffer?.finalPrice);
 
-      setLoadingConversion(true);
-      try {
-        const result = await convertCurrencyToCrypto(
-          currentOffer?.crypto?.toUpperCase() || "BTC",
-          Number(value),
-          currentOffer?.currency.toUpperCase() || "USD"
-        );
-
-        setCryptoValue(result);
-      } catch (err) {
-        console.error("Conversion failed:", err);
-        setCryptoValue(0);
-      } finally {
-        setLoadingConversion(false);
-      }
-    }, 500), // 500ms debounce
-    [currentOffer]
-  );
+      setCryptoValue(result);
+    } else {
+      setCryptoValue(0);
+    }
+  };
 
   const hanndleCreateTrade = async () => {
     setIsCreating(true);
@@ -219,7 +215,8 @@ const Trade = () => {
     const createTradeRes = await createTrade(
       isArray(offerId) ? offerId[0] : offerId,
       conversionAmount,
-      cryptoValue
+      cryptoValue,
+      currentOffer?.finalPrice || 0
     );
 
     setIsCreating(false);
@@ -247,6 +244,7 @@ const Trade = () => {
                 pathname: "/process-trade/[id]",
                 params: {
                   id: createTradeRes?.trade?.id,
+                  finalPrice: currentOffer?.finalPrice,
                 },
               });
             },
@@ -368,16 +366,10 @@ const Trade = () => {
                         =
                       </Text>
 
-                      <CryptoPriceWithMargin
-                        coin={currentOffer?.crypto || "BTC"}
-                        margin={currentOffer?.margin}
-                        displayStyle={{
-                          color: colors.secondary,
-                          fontWeight: 500,
-                          fontSize: ms(14),
-                        }}
-                        refresh={refresh}
-                      />
+                      <Text style={styles.subHeader}>
+                        {currencyDetails?.symbol}
+                        {priceFormater(currentOffer?.finalPrice ?? 0)}
+                      </Text>
                     </View>
                     <View
                       style={{
@@ -421,7 +413,11 @@ const Trade = () => {
               <View
                 style={[
                   globalStyles.sectionBox,
-                  { gap: 10, backgroundColor: "#222222" },
+                  {
+                    gap: 10,
+                    backgroundColor: "#222222",
+                    justifyContent: "center",
+                  },
                 ]}
               >
                 <Text
@@ -509,7 +505,7 @@ const Trade = () => {
                     >
                       <Text
                         style={{
-                          fontSize: ms(12),
+                          fontSize: ms(14),
                           fontWeight: 400,
                           color: colors.gray4,
                         }}
@@ -526,17 +522,10 @@ const Trade = () => {
                         =
                       </Text>
 
-                      <CryptoConverter
-                        amount={1}
-                        coin={currentOffer?.crypto || "BTC"}
-                        currency={currentOffer?.currency || "USD"}
-                        style={{
-                          fontSize: ms(12),
-                          fontWeight: 500,
-                          color: colors.secondary,
-                        }}
-                        refresh={refresh}
-                      />
+                      <Text style={styles.subHeader}>
+                        {(1 / (currentOffer?.finalPrice ?? 0)).toFixed(6)}{" "}
+                        {currentOffer?.crypto}
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -577,7 +566,11 @@ const Trade = () => {
                       // flex: 1,
                     }}
                   >
-                    {cryptoValue}
+                    {conversionAmount <= 0 ||
+                    String(conversionAmount) == "" ||
+                    conversionAmount == null
+                      ? cryptoValue
+                      : cryptoValue.toFixed(6)}
                   </Text>
                   <View
                     style={{
@@ -657,7 +650,7 @@ const Trade = () => {
                       color: colors.white2,
                     }}
                   >
-                    {currentOffer?.paymentMethod.name}
+                    {currentOffer?.paymentMethod?.name}
                   </Text>
                 </View>
                 <View style={styles.bottom}>
@@ -836,5 +829,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  subHeader: {
+    fontSize: ms(15),
+    fontWeight: "400",
+    lineHeight: 24,
+    color: colors.gray4,
   },
 });

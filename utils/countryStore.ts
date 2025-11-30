@@ -264,6 +264,15 @@ export const getUser = async () => {
   }
 };
 
+export const getCountriesData = async () => {
+  try {
+    const res = await fetch(base_url + "/api/get-supported-countries");
+    return await res.json();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getUserById = async (userId: string) => {
   try {
     const token = await getItemAsync("authToken");
@@ -1351,7 +1360,8 @@ export function priceFormater(
 export const createTrade = async (
   offerId: string,
   amountFiat: number,
-  amountCrypto: number
+  amountCrypto: number,
+  tradePrice: number
 ) => {
   const token = await getItemAsync("authToken");
   let data;
@@ -1368,6 +1378,7 @@ export const createTrade = async (
         offerId,
         amountFiat,
         amountCrypto,
+        tradePrice,
       }),
       method: "POST",
     });

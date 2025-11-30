@@ -8,7 +8,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
 import { ms, s } from "react-native-size-matters";
 import StepOne from "@/components/processTrade/StepOne";
-import { cancelTrade, getChats, getTrade } from "@/utils/countryStore";
+import {
+  cancelTrade,
+  fetchPrices,
+  getChats,
+  getTrade,
+} from "@/utils/countryStore";
 import { isArray } from "lodash";
 import { useAlert } from "@/components/AlertService";
 import StepTwo from "@/components/processTrade/StepTwo";
@@ -40,6 +45,16 @@ const ProcessTrade = () => {
 
   const user = useUserStore((state) => state.user);
 
+  // listen for new messages
+  const handleNewMessage = (msg: any) => {
+    setMessages((prev: any) => {
+      // Avoid duplicates by id
+      const exists = prev.find((m: any) => m.id === msg.id);
+      if (exists) return prev;
+      return [...prev, msg];
+    });
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -63,20 +78,21 @@ const ProcessTrade = () => {
         setLoading(false);
       }
     })();
-  }, [tradeId, activeTab, refreshKey]);
+  }, [tradeId]);
 
   useEffect(() => {
-    if (!currentTrade?.chat?.id) return;
+    if (!currentTrade) return;
+    (async () => {})();
+  }, [currentTrade]);
+
+  useEffect(() => {
+    if (!currentTrade) return;
 
     const chatId = currentTrade?.chat?.id;
 
     // join the chat room once
     socket.emit("join_chat", chatId);
-
-    // listen for new messages
-    const handleNewMessage = (msg: any) => {
-      setMessages((prev: any) => [...prev, msg]);
-    };
+    socket.emit("join_trade", currentTrade?.id);
 
     socket.on("new_message", handleNewMessage);
 
@@ -87,16 +103,20 @@ const ProcessTrade = () => {
     // cleanup only when unmounting or chatId changes
     return () => {
       socket.off("new_message", handleNewMessage);
-      socket.emit("leave_chat", chatId); // optional: tell server you left
+      socket.off("new_trade", (trade: any) => {
+        // setCurrentTrade(trade);
+      });
+      socket.emit("leave_chat", chatId); // optional: tell server you left chat
+      socket.emit("leave_trade", currentTrade?.id); // optional: tell server you left trade
     };
-  }, [currentTrade?.chat?.id]);
+  }, [currentTrade]);
 
   useEffect(() => {
-    if (currentTrade) {
-      const myType = currentTrade?.buyerId == user?.id ? "buyer" : "seller";
+    if (!currentTrade) return;
 
-      setType(myType);
-    }
+    const myType = currentTrade?.buyerId == user?.id ? "buyer" : "seller";
+
+    setType(myType);
   }, [currentTrade]);
 
   useEffect(() => {
@@ -191,59 +211,61 @@ const ProcessTrade = () => {
                 </Text> */}
               </Pressable>
 
-              {currentTrade?.status == "CANCELLED" ? null : (
-                <Pressable
-                  onPress={() =>
-                    showAlert(
-                      "Cancel Trade?",
-                      type == "seller"
-                        ? `This will cancel your trade with @${currentTrade?.buyer?.username}. The crypto will be released from escrow, and you won’t be able to continue this transaction`
-                        : `This will cancel your trade with @${currentTrade?.seller?.username}. The crypto will be released from escrow, and you won’t be able to continue this transaction`,
-                      [
-                        {
-                          text: "Yes, Cancel Trade",
-                          onPress: handleCancle,
-                          style: { backgroundColor: "#FE857D" },
-                          textStyle: { color: colors.primary },
-                        },
-                        {
-                          text: "Keep Trade Open",
-                          onPress() {},
-                          style: { backgroundColor: "#2D2D2D" },
-                        },
-                      ],
-                      "error"
-                    )
-                  }
-                  disabled={
-                    activeTab == "step-two" ||
-                    activeTab == "step-three" ||
-                    cancelling
-                  }
-                  style={{ padding: 15 }}
-                >
-                  {cancelling ? (
-                    <Spinner height={20} width={20} />
-                  ) : (
-                    <Text
-                      style={[
-                        {
-                          fontSize: ms(14),
-                          fontWeight: 700,
-                          color: colors.white2,
-                        },
-                        (activeTab == "step-two" ||
-                          activeTab == "step-three" ||
-                          cancelling) && {
-                          color: "#5C5C5C",
-                        },
-                      ]}
+              {currentTrade?.status == "CANCELLED"
+                ? null
+                : user?.id == currentTrade?.buyer?.id && (
+                    <Pressable
+                      onPress={() =>
+                        showAlert(
+                          "Cancel Trade?",
+                          type == "seller"
+                            ? `This will cancel your trade with @${currentTrade?.buyer?.username}. The crypto will be released from escrow, and you won’t be able to continue this transaction`
+                            : `This will cancel your trade with @${currentTrade?.seller?.username}. The crypto will be released from escrow, and you won’t be able to continue this transaction`,
+                          [
+                            {
+                              text: "Yes, Cancel Trade",
+                              onPress: handleCancle,
+                              style: { backgroundColor: "#FE857D" },
+                              textStyle: { color: colors.primary },
+                            },
+                            {
+                              text: "Keep Trade Open",
+                              onPress() {},
+                              style: { backgroundColor: "#2D2D2D" },
+                            },
+                          ],
+                          "error"
+                        )
+                      }
+                      disabled={
+                        activeTab == "step-two" ||
+                        activeTab == "step-three" ||
+                        cancelling
+                      }
+                      style={{ padding: 15 }}
                     >
-                      Cancel trade
-                    </Text>
+                      {cancelling ? (
+                        <Spinner height={20} width={20} />
+                      ) : (
+                        <Text
+                          style={[
+                            {
+                              fontSize: ms(14),
+                              fontWeight: 700,
+                              color: colors.white2,
+                            },
+                            (activeTab == "step-two" ||
+                              activeTab == "step-three" ||
+                              cancelling) && {
+                              color: "#5C5C5C",
+                            },
+                          ]}
+                        >
+                          Cancel trade
+                        </Text>
+                      )}
+                    </Pressable>
                   )}
-                </Pressable>
-              )}
             </View>
             {/* end of topbar */}
 

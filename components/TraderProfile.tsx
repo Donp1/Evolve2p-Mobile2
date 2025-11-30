@@ -281,7 +281,7 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                       </Text>
                       {user?.kycVerified ? (
                         <AntDesign
-                          name="checkcircle"
+                          name="check-circle"
                           size={15}
                           color={colors.accent}
                         />
@@ -368,7 +368,7 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                   }}
                 >
                   <AntDesign
-                    name="checkcircle"
+                    name="check-circle"
                     size={10}
                     color={colors.accent}
                   />
@@ -391,7 +391,7 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                   }}
                 >
                   <AntDesign
-                    name="checkcircle"
+                    name="check-circle"
                     size={10}
                     color={colors.accent}
                   />
@@ -415,7 +415,7 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                 >
                   {user?.kycVerified ? (
                     <AntDesign
-                      name="checkcircle"
+                      name="check-circle"
                       size={15}
                       color={colors.accent}
                     />
@@ -441,7 +441,7 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                   }}
                 >
                   <AntDesign
-                    name="checkcircle"
+                    name="check-circle"
                     size={10}
                     color={colors.accent}
                   />
@@ -798,7 +798,7 @@ const TraderProfile = ({ visible, setVisible, userId }: TraderProfileProps) => {
                       key={paymentMethod.id}
                     >
                       <AntDesign
-                        name="checkcircle"
+                        name="check-circle"
                         size={15}
                         color={colors.accent}
                       />

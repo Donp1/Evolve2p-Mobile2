@@ -13,13 +13,7 @@ import {
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { globalStyles } from "@/utils/globalStyles";
-
-type Country = {
-  name: { common: string };
-  flags: { png: string };
-  currencies: { [code: string]: { name: string; symbol: string } };
-  cca2: string;
-};
+import { Country, useCountryStore } from "@/store/countryStore";
 
 export type SelectedCurrency = {
   code: string;
@@ -39,59 +33,63 @@ export default function CurrencySelectorModal({
   onClose,
   onSelect,
 }: Props) {
-  const [countries, setCountries] = useState<Country[]>([]);
   const [filtered, setFiltered] = useState<Country[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [selectedCurrency, setSelectedCurrency] =
     useState<SelectedCurrency | null>(null);
 
-  // Fetch countries ONCE when the component mounts
+  const { countries, loading, error } = useCountryStore();
+
+  /*  
+    🔥 Process & set filtered list when countries change  
+    Set default USD just once on first fetch  
+  */
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await fetch(
-          "https://restcountries.com/v3.1/all?fields=name,flags,currencies,cca2"
-        );
-        const data: Country[] = await res.json();
-        const withCurrency = data.filter((c) => c.currencies);
-        setCountries(withCurrency);
-        setFiltered(withCurrency);
+    if (countries.length === 0) return;
 
-        // **Set USD (United States) as default**
-        const usdCountry = withCurrency.find(
-          (c) => c.currencies?.USD && c.cca2 === "US"
-        );
-        if (usdCountry) {
-          const defaultCurrency: SelectedCurrency = {
-            code: "USD",
-            name: usdCountry.currencies["USD"].name,
-            symbol: usdCountry.currencies["USD"].symbol,
-            flag: usdCountry.flags.png,
-          };
-          setSelectedCurrency(defaultCurrency);
-          onSelect(defaultCurrency);
-        }
-      } catch (e) {
-        console.error("Error fetching countries:", e);
-      } finally {
-        setLoading(false);
+    const withCurrency = countries.filter((c) => c.currencies);
+    setFiltered(withCurrency);
+
+    // Set default USD only if user hasn't selected anything yet
+    if (!selectedCurrency) {
+      const usdCountry = withCurrency?.find(
+        (c) => c.currencies?.USD && c.cca2 === "US"
+      );
+
+      if (usdCountry) {
+        const defaultCurrency: SelectedCurrency = {
+          code: "USD",
+          name: usdCountry.currencies?.["USD"]?.name ?? "",
+          symbol: usdCountry.currencies?.["USD"]?.symbol ?? "",
+          flag: usdCountry.flags.png,
+        };
+
+        setSelectedCurrency(defaultCurrency);
+        onSelect(defaultCurrency);
       }
-    };
+    }
+  }, [countries]);
 
-    fetchCountries();
-  }, []); // <-- Only run once on mount
-
-  // Filter when user searches or modal opens
+  /*  
+    🔥 Filter when user types OR modal opens  
+  */
   useEffect(() => {
     if (!visible) return;
-    setFiltered(
-      search
-        ? countries.filter((c) =>
-            c.name.common.toLowerCase().includes(search.toLowerCase())
-          )
-        : countries
-    );
+
+    const lower = search.toLowerCase();
+
+    const list = search
+      ? countries.filter((c) => {
+          const nameMatch = c.name?.common?.toLowerCase().includes(lower);
+
+          const currencyCode = Object.keys(c.currencies || {})[0]; // e.g. "USD", "NGN"
+          const currencyMatch = currencyCode?.toLowerCase().includes(lower);
+
+          return nameMatch || currencyMatch;
+        })
+      : countries;
+
+    setFiltered(list);
   }, [search, visible, countries]);
 
   const handleSearch = (text: string) => {
@@ -99,23 +97,23 @@ export default function CurrencySelectorModal({
   };
 
   const handleSelect = (item: Country) => {
-    const code = Object.keys(item.currencies)[0];
+    const code = Object.keys(item.currencies ?? {})[0];
     const currencyObj: SelectedCurrency = {
       code,
-      name: item.currencies[code].name,
-      symbol: item.currencies[code].symbol,
+      name: item.currencies?.[code]?.name ?? "",
+      symbol: item.currencies?.[code]?.symbol ?? "",
       flag: item.flags.png,
     };
 
-    setSearch("");
     setSelectedCurrency(currencyObj);
+    setSearch("");
     onSelect(currencyObj);
     onClose?.();
   };
 
   const renderItem: ListRenderItem<Country> = useCallback(
     ({ item }) => {
-      const code = Object.keys(item.currencies)[0];
+      const code = Object.keys(item.currencies || {})[0];
       return (
         <TouchableOpacity
           style={[
@@ -136,29 +134,17 @@ export default function CurrencySelectorModal({
   );
 
   return (
-    <Modal
-      style={{ flex: 1 }}
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-    >
+    <Modal visible={visible} animationType="slide" transparent>
       <SafeAreaView style={globalStyles.container}>
         <View style={styles.overlay}>
           <View style={styles.modal}>
             <View style={styles.header}>
               <Text style={styles.title}>Select preferred currency</Text>
-              <Pressable
-                style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                }}
-                onPress={onClose}
-              >
+              <Pressable onPress={onClose} style={{ padding: 10 }}>
                 <Text style={styles.close}>✕</Text>
               </Pressable>
             </View>
 
-            {/* Show currently selected currency above search */}
             {selectedCurrency && (
               <View style={styles.selectedInfo}>
                 <Image
@@ -182,15 +168,12 @@ export default function CurrencySelectorModal({
             {loading ? (
               <ActivityIndicator size="large" color="#00ffcc" />
             ) : (
-              <View style={{ flex: 1 }}>
-                <FlashList
-                  data={filtered}
-                  estimatedItemSize={56}
-                  renderItem={renderItem}
-                  keyExtractor={(item, index) => `${item.cca2}-${index}`}
-                  contentContainerStyle={{ paddingBottom: 24 }}
-                />
-              </View>
+              <FlashList
+                data={filtered}
+                renderItem={renderItem}
+                keyExtractor={(item, index) => `${item.cca2}-${index}`}
+                contentContainerStyle={{ paddingBottom: 24 }}
+              />
             )}
           </View>
         </View>

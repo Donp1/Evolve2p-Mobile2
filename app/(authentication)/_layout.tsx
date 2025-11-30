@@ -18,13 +18,14 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 import { useAlert } from "@/components/AlertService";
 import { colors } from "@/constants";
+import { useCountryStore } from "@/store/countryStore";
 
 const AuthLayout = () => {
   const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
-  const [isPermissionGranted, setIsPermissionGranted] = useState(false);
   const { showAlert, AlertComponent } = useAlert();
   const hasShownAlert = useRef(false);
+  const fetchCountries = useCountryStore((s) => s.fetchCountries);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -46,6 +47,16 @@ const AuthLayout = () => {
       socket.disconnect();
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await fetchCountries();
+      } catch (error) {
+        console.log("error fetching countries: ", error);
+      }
+    })();
+  }, []);
 
   return (
     <>

@@ -31,6 +31,7 @@ import { Link, useRouter } from "expo-router";
 import { useCountdown } from "@/hooks/useCountdown";
 import TraderProfile from "../TraderProfile";
 import { useUserStore } from "@/store/userStore";
+import CurrencyPriceAmount from "@/components/CurrencyPriceAmount";
 
 interface pageProps {
   currentTrade: any;
@@ -70,41 +71,6 @@ const StepOne = ({
     setIsPaying(true);
 
     const res = await markAsPaid(tradeId);
-
-    if (res?.error) {
-      showAlert(
-        "Error",
-        res?.message,
-        [{ text: "Close", onPress() {} }],
-        "error"
-      );
-      setIsPaying(false);
-      return;
-    }
-
-    if (res?.success) {
-      showAlert(
-        "Successful",
-        res?.message,
-        [
-          {
-            text: "Continue",
-            onPress() {
-              setActiveTab("step-two");
-              setCompletedSteps((tabs) => [...tabs, "step-one"]);
-            },
-          },
-        ],
-        "success"
-      );
-      setIsPaying(false);
-    }
-  };
-
-  const handleRelease = async () => {
-    setIsPaying(true);
-
-    const res = await releaseCrypto(tradeId);
 
     if (res?.error) {
       showAlert(
@@ -410,8 +376,11 @@ const StepOne = ({
                 color: colors.secondary,
               }}
             >
-              1 {currentTrade?.offer?.crypto} ={" "}
-              {priceFormater(currentCoin?.price || 0, { style: "currency" })}
+              1 {currentTrade?.offer?.crypto} = {currentTrade?.offer?.currency}{" "}
+              {priceFormater(currentTrade?.tradePrice, {
+                style: "standard",
+              })}
+              {/* {priceFormater(currentCoin?.price || 0, { style: "currency" })} */}
             </Text>
           </View>
           <View style={styles.middle}>
@@ -432,7 +401,8 @@ const StepOne = ({
                 color: colors.accent,
               }}
             >
-              {currentTrade?.amountCrypto} {currentCoin?.symbol?.toUpperCase()}
+              {Number(currentTrade?.amountCrypto).toFixed(6)}{" "}
+              {currentCoin?.symbol?.toUpperCase()}
             </Text>
           </View>
           <View style={styles.middle}>
@@ -686,16 +656,13 @@ const StepOne = ({
 
         {/* submit button */}
 
-        {currentTrade?.status == "CANCELLED" ? null : (
+        {currentTrade?.status == "CANCELLED" && type != "seller" ? null : (
           <Pressable
             onPress={() =>
               showAlert(
-                type == "seller"
-                  ? "Confirm payment received?"
-                  : "Made the payment?",
-                type == "seller"
-                  ? `Have you verified the buyer's payment in your bank account? This action will release ${currentTrade?.amountCrypto} ${currentTrade?.amountFiat} from escrow to the buyer.`
-                  : "Ensure you’ve made payment of the exact amount using the provided payment method.",
+                "Made the payment?",
+
+                "Ensure you’ve made payment of the exact amount using the provided payment method.",
                 [
                   {
                     text: "Cancle",
@@ -703,8 +670,8 @@ const StepOne = ({
                     style: { backgroundColor: "#2D2D2D" },
                   },
                   {
-                    text: type == "seller" ? "Release Crypto" : "Yes, Paid",
-                    onPress: type == "seller" ? handleRelease : handlePaid,
+                    text: "Yes, Paid",
+                    onPress: handlePaid,
                     style: { backgroundColor: colors.accent },
                     textStyle: { color: colors.primary },
                   },
@@ -726,12 +693,7 @@ const StepOne = ({
             {isPaying ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
-              <Text style={globalStyles.btnText}>
-                {" "}
-                {type == "seller"
-                  ? "Confirm Payment Recieved"
-                  : "Paid, Notify Seller"}{" "}
-              </Text>
+              <Text style={globalStyles.btnText}>Paid, Notify Seller</Text>
             )}
           </Pressable>
         )}

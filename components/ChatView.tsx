@@ -11,6 +11,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  KeyboardAvoidingView,
 } from "react-native";
 import React, {
   Dispatch,
@@ -36,6 +37,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAlert } from "./AlertService";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 interface PageProps {
   isOpen: boolean;
@@ -152,7 +154,6 @@ const ChatView = ({
         content,
         file || undefined
       );
-      console.log(newchat);
       setContent("");
       setFile(null);
     } finally {
@@ -300,7 +301,8 @@ const ChatView = ({
   return (
     <Modal animationType="slide" transparent visible={isOpen}>
       <SafeAreaView style={globalStyles.container}>
-        <View style={styles.container}>
+        {AlertComponent}
+        <KeyboardAvoidingView style={styles.container}>
           {/* Top bar */}
           <View style={styles.top}>
             <Pressable onPress={() => setIsOpen(false)} style={{ padding: 10 }}>
@@ -355,70 +357,91 @@ const ChatView = ({
                   {currentTrade?.offer?.currency}
                 </Text>
               </View>
-              <Pressable
-                onPress={() =>
-                  showAlert(
-                    type == "seller"
-                      ? "Confirm payment received?"
-                      : "Made the payment?",
-                    type == "seller"
-                      ? "Have you verified the buyer's payment in your bank account? This action will release 0.0048 BTC from escrow to the buyer."
-                      : "Ensure you’ve made payment of the exact amount using the provided payment method.",
-                    [
-                      {
-                        text: "Cancle",
-                        onPress() {},
-                        style: { backgroundColor: "#2D2D2D" },
-                      },
-                      {
-                        text: type == "seller" ? "Release Crypto" : "Yes, Paid",
-                        onPress: type == "seller" ? handleRelease : handlePaid,
-                        style: { backgroundColor: colors.accent },
-                        textStyle: { color: colors.primary },
-                      },
-                    ],
-                    "info"
-                  )
-                }
-                disabled={
-                  (currentTrade?.status == "PAID" && type == "buyer") ||
-                  currentTrade?.status == "CANCELLED" ||
-                  currentTrade?.status == "COMPLETED"
-                }
-                style={[
-                  globalStyles.btn,
-                  { width: "auto", paddingHorizontal: 10 },
-                  currentTrade?.status == "PAID" &&
-                    type == "buyer" && {
+
+              {currentTrade?.status == "PENDING" ? (
+                <Pressable
+                  onPress={
+                    currentTrade?.seller?.id == user.id
+                      ? handleRelease
+                      : currentTrade?.buyer?.id == user.id
+                      ? handlePaid
+                      : null
+                  }
+                  disabled={
+                    currentTrade?.status == "PAID" ||
+                    currentTrade?.status == "CANCELLED" ||
+                    currentTrade?.status == "COMPLETED" ||
+                    currentTrade?.status == "DISPUTED"
+                  }
+                  style={[
+                    globalStyles.btn,
+                    { width: "auto", paddingHorizontal: 10 },
+                  ]}
+                >
+                  {isPaying ? (
+                    <Spinner width={20} height={20} />
+                  ) : (
+                    <Text style={[globalStyles.btnText]}>
+                      {currentTrade?.seller?.id == user.id && "Release Funds"}
+                      {currentTrade?.buyer?.id == user.id && "Mark as Paid"}
+                    </Text>
+                  )}
+                </Pressable>
+              ) : (
+                <Pressable
+                  disabled={
+                    currentTrade?.status == "PAID" ||
+                    currentTrade?.status == "CANCELLED" ||
+                    currentTrade?.status == "COMPLETED" ||
+                    currentTrade?.status == "DISPUTED"
+                  }
+                  style={[
+                    globalStyles.btn,
+                    { width: "auto", paddingHorizontal: 10 },
+                    currentTrade?.status == "PAID" && {
                       backgroundColor: "#3A3A3A",
                     },
-                  currentTrade?.status == "CANCELLED" && {
-                    backgroundColor: "#3A3A3A",
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    globalStyles.btnText,
-                    currentTrade?.status == "PAID" &&
-                      type == "buyer" && {
-                        color: colors.white,
-                      },
                     currentTrade?.status == "CANCELLED" && {
-                      color: colors.white,
+                      backgroundColor: "#3A3A3A",
+                    },
+
+                    currentTrade?.status == "COMPLETED" && {
+                      backgroundColor: "#3A3A3A",
+                    },
+                    currentTrade?.status == "DISPUTED" && {
+                      backgroundColor: "#3A3A3A",
                     },
                   ]}
                 >
-                  {currentTrade?.status == "CANCELLED"
-                    ? "Cancelled"
-                    : currentTrade?.status == "PAID"
-                    ? "Paid"
-                    : type == "seller"
-                    ? "Yes, Recieved"
-                    : "Paid"}
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      globalStyles.btnText,
+                      currentTrade?.status == "PAID" && {
+                        color: colors.white,
+                      },
+                      currentTrade?.status == "CANCELLED" && {
+                        color: colors.white,
+                      },
+                      currentTrade?.status == "DISPUTED" && {
+                        color: colors.white,
+                      },
+
+                      currentTrade?.status == "COMPLETED" && {
+                        color: colors.accent,
+                      },
+                    ]}
+                  >
+                    {currentTrade?.status}
+                  </Text>
+                </Pressable>
+              )}
             </View>
+
+            {/* <KeyboardAwareScrollView
+              contentContainerStyle={{ flexGrow: 1 }}
+              enableOnAndroid
+              extraScrollHeight={20} // pushes content above keyboard
+            ></KeyboardAwareScrollView> */}
 
             <ScrollView
               ref={scrollRef}
@@ -433,7 +456,10 @@ const ChatView = ({
                 )
                 .map((message: any) => {
                   // System message
-                  if (message.type === "SYSTEM" && !message.senderId) {
+                  if (
+                    (message.type === "SYSTEM" || message.type === "SUPPORT") &&
+                    !message.senderId
+                  ) {
                     return (
                       <View
                         key={message.id}
@@ -449,7 +475,12 @@ const ChatView = ({
                           <Text
                             style={{ color: colors.accent, fontWeight: "500" }}
                           >
-                            Service message
+                            {message.type === "SYSTEM"
+                              ? "Service message"
+                              : null}
+                            {message.type === "SUPPORT"
+                              ? "Customer Support"
+                              : null}
                           </Text>
                           <Text
                             style={{ color: colors.gray4, fontSize: ms(12) }}
@@ -579,24 +610,24 @@ const ChatView = ({
               )}
             </Pressable>
           </View>
+        </KeyboardAvoidingView>
 
-          {/* Fullscreen image preview (tap to close) */}
-          <Modal visible={!!imagePreviewUri} transparent animationType="fade">
-            <TouchableOpacity
-              activeOpacity={1}
-              style={styles.viewerBackdrop}
-              onPress={() => setImagePreviewUri(null)}
-            >
-              {imagePreviewUri && (
-                <Image
-                  source={{ uri: imagePreviewUri }}
-                  style={styles.viewerImage}
-                  resizeMode="contain"
-                />
-              )}
-            </TouchableOpacity>
-          </Modal>
-        </View>
+        {/* Fullscreen image preview (tap to close) */}
+        <Modal visible={!!imagePreviewUri} transparent animationType="fade">
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.viewerBackdrop}
+            onPress={() => setImagePreviewUri(null)}
+          >
+            {imagePreviewUri && (
+              <Image
+                source={{ uri: imagePreviewUri }}
+                style={styles.viewerImage}
+                resizeMode="contain"
+              />
+            )}
+          </TouchableOpacity>
+        </Modal>
       </SafeAreaView>
     </Modal>
   );
@@ -677,6 +708,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
     marginVertical: 5,
+    alignSelf: "flex-start",
+    width: "100%",
   },
   serviceMessageText: {
     color: colors.white2,

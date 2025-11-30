@@ -84,45 +84,45 @@ const OfferCardUI: React.FC<OfferCardProps> = ({
     );
   }, [coins, offer?.crypto]);
 
-  useEffect(() => {
-    if (!offer.crypto) return;
+  // useEffect(() => {
+  //   if (!offer.crypto) return;
 
-    const fetchPrice = async () => {
-      abortController.current?.abort(); // cancel any previous request
-      const controller = new AbortController();
-      abortController.current = controller;
+  //   const fetchPrice = async () => {
+  //     abortController.current?.abort(); // cancel any previous request
+  //     const controller = new AbortController();
+  //     abortController.current = controller;
 
-      try {
-        setLoading(true);
-        const data = await fetchWithRetry(
-          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd",
-          3,
-          500,
-          controller.signal
-        );
+  //     try {
+  //       setLoading(true);
+  //       const data = await fetchWithRetry(
+  //         "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd",
+  //         3,
+  //         500,
+  //         controller.signal
+  //       );
 
-        const cryptoId =
-          cryptoMap[offer.crypto.toUpperCase() as keyof typeof cryptoMap];
-        if (!cryptoId || !data[cryptoId]) {
-          throw new Error("Invalid coin symbol or missing data.");
-        }
-        setBasePrice(data[cryptoId].usd);
-      } catch (err) {
-        if ((err as any).name !== "AbortError") {
-          console.error("Error fetching crypto price:", err);
-          setBasePrice(null);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       const cryptoId =
+  //         cryptoMap[offer.crypto.toUpperCase() as keyof typeof cryptoMap];
+  //       if (!cryptoId || !data[cryptoId]) {
+  //         throw new Error("Invalid coin symbol or missing data.");
+  //       }
+  //       setBasePrice(data[cryptoId].usd);
+  //     } catch (err) {
+  //       if ((err as any).name !== "AbortError") {
+  //         console.error("Error fetching crypto price:", err);
+  //         setBasePrice(null);
+  //       }
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchPrice();
+  //   fetchPrice();
 
-    return () => {
-      abortController.current?.abort();
-    };
-  }, [offer.crypto, cryptoMap]);
+  //   return () => {
+  //     abortController.current?.abort();
+  //   };
+  // }, [offer.crypto, cryptoMap]);
 
   const adjustedPrice = useMemo(() => {
     if (basePrice === null) return null;
@@ -143,15 +143,19 @@ const OfferCardUI: React.FC<OfferCardProps> = ({
               style={{ width: 15, height: 15 }}
             />
             <Text style={styles.subText}>
-              {offer.crypto} • {offer.currency}
+              {offer.crypto} • {offer?.currency}
             </Text>
           </View>
-          <Text style={styles.marginText}>Margin: {offer.margin}%</Text>
+          <Text style={styles.marginText}>Margin: {offer?.margin}%</Text>
         </View>
 
         <View>
           <Text style={styles.subText}>PRICE</Text>
-          {loading ? (
+          <Text style={styles.marginText}>
+            {offer?.currency}{" "}
+            {priceFormater(offer?.finalPrice, { style: "standard" })}
+          </Text>
+          {/* {loading ? (
             <ActivityIndicator size="small" color={colors.secondary} />
           ) : adjustedPrice ? (
             <Text style={styles.marginText}>
@@ -159,7 +163,7 @@ const OfferCardUI: React.FC<OfferCardProps> = ({
             </Text>
           ) : (
             <Text style={styles.typeBadge}>Price unavailable</Text>
-          )}
+          )} */}
         </View>
       </View>
 

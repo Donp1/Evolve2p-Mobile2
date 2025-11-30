@@ -1,11 +1,6 @@
 import { Offer } from "@/hooks/useOffers";
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { colors } from "@/constants";
 import { ms } from "react-native-size-matters";
 import TraderProfile from "./TraderProfile";
@@ -64,31 +59,31 @@ const OfferCard: React.FC<OfferCardProps> = ({
   const [basePrice, setBasePrice] = useState<number | null>(null);
   const [showTradeProfile, setShowTradeProfile] = useState(false);
 
-  useEffect(() => {
-    if (!offer.crypto) return;
+  // useEffect(() => {
+  //   if (!offer.crypto) return;
 
-    let isMounted = true;
+  //   let isMounted = true;
 
-    (async () => {
-      try {
-        const data = await fetchWithRetry(
-          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd"
-        );
+  //   (async () => {
+  //     try {
+  //       const data = await fetchWithRetry(
+  //         "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd"
+  //       );
 
-        const cryptoId = cryptoMap[offer.crypto.toUpperCase()];
-        if (cryptoId && data[cryptoId]?.usd && isMounted) {
-          setBasePrice(data[cryptoId].usd);
-        }
-      } catch (err) {
-        console.error("Failed to fetch crypto price:", err);
-        if (isMounted) setBasePrice(null);
-      }
-    })();
+  //       const cryptoId = cryptoMap[offer.crypto.toUpperCase()];
+  //       if (cryptoId && data[cryptoId]?.usd && isMounted) {
+  //         setBasePrice(data[cryptoId].usd);
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch crypto price:", err);
+  //       if (isMounted) setBasePrice(null);
+  //     }
+  //   })();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [offer.crypto]);
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [offer.crypto]);
 
   const adjustedPrice =
     basePrice !== null

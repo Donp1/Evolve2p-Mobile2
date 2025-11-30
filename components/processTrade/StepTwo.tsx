@@ -29,6 +29,8 @@ import TradeStatus from "../TradeStatus";
 import { useAlert } from "../AlertService";
 import { useUserStore } from "@/store/userStore";
 import TraderProfile from "../TraderProfile";
+import CurrencyPriceAmount from "@/components/CurrencyPriceAmount";
+import { useCountdown } from "@/hooks/useCountdown";
 
 interface pageProps {
   currentTrade: any;
@@ -40,6 +42,19 @@ interface pageProps {
   isOpenDispute: boolean;
   type: string;
 }
+
+const getCoinId = (coin: string) => {
+  // Map common coin symbols to CoinGecko IDs
+  const map: Record<string, string> = {
+    BTC: "bitcoin",
+    ETH: "ethereum",
+    USDT: "tether",
+    BNB: "binancecoin",
+    TRX: "tron",
+  };
+  return map[coin.toUpperCase()] || coin.toLowerCase();
+};
+
 const StepTwo = ({
   currentTrade,
   tradeId,
@@ -63,40 +78,12 @@ const StepTwo = ({
     (c) => c.symbol?.toUpperCase() == currentTrade?.offer?.crypto
   );
 
+  const { isExpired, minutes, seconds } = useCountdown(
+    currentTrade?.paidAt,
+    30
+  );
+
   const { AlertComponent, showAlert } = useAlert();
-
-  const handlePaid = async () => {
-    setIsPaying(true);
-
-    const res = await markAsPaid(tradeId);
-
-    if (res?.error) {
-      showAlert(
-        "Error",
-        res?.message,
-        [{ text: "Close", onPress() {} }],
-        "error"
-      );
-      return;
-    }
-
-    if (res?.success) {
-      showAlert(
-        "Successful",
-        res?.message,
-        [
-          {
-            text: "Continue",
-            onPress() {
-              setActiveTab("step-two");
-              setCompletedSteps((tabs) => [...tabs, "step-one"]);
-            },
-          },
-        ],
-        "success"
-      );
-    }
-  };
 
   const handleRelease = async () => {
     setIsPaying(true);
@@ -138,58 +125,9 @@ const StepTwo = ({
       {AlertComponent}
       <View style={styles.flexContainer}>
         <View>
-          <Text style={styles.headingText}>
-            {currentTrade?.status == "DISPUTED"
-              ? "Trade Paused"
-              : "Payment In Review"}
-          </Text>
-          {/* <Text style={styles.subHeadingText}>
-            Order ID: E2P-2453019273001180
-          </Text> */}
+          <Text style={styles.headingText}>Trade {currentTrade?.status}</Text>
         </View>
       </View>
-
-      {currentTrade?.status == "DISPUTED" ? (
-        <View>
-          <Text
-            style={{
-              fontSize: ms(16),
-              fontWeight: 400,
-              color: colors.secondary,
-              lineHeight: 24,
-              marginTop: 10,
-            }}
-          >
-            Your dispute has been submitted.Our support team is now reviewing
-            this trade and the details submitted by both parties.
-          </Text>
-          <Text
-            style={{
-              fontSize: ms(16),
-              fontWeight: 400,
-              color: colors.secondary,
-              lineHeight: 24,
-              marginTop: 10,
-            }}
-          >
-            You can view updates from the support team and respond via chat.
-          </Text>
-        </View>
-      ) : (
-        <Text
-          style={{
-            fontSize: ms(16),
-            fontWeight: 400,
-            color: colors.secondary,
-            lineHeight: 24,
-            marginTop: 10,
-          }}
-        >
-          {type == "seller"
-            ? `@${currentTrade?.buyer?.username} marked this trade as Paid. Please confirm in your bank account before releasing crypto.`
-            : "You’ve marked this trade as paid. We’ve notified the seller. Your crypto is securely held in escrow until payment is confirmed."}
-        </Text>
-      )}
 
       <Pressable
         onPress={() => setIsOpenChat(true)}
@@ -432,8 +370,11 @@ const StepTwo = ({
                 color: colors.secondary,
               }}
             >
-              1 {currentTrade?.offer?.crypto} ={" "}
-              {priceFormater(currentCoin?.price || 0, { style: "currency" })}
+              1 {currentTrade?.offer?.crypto} = {currentTrade?.offer?.currency}{" "}
+              {priceFormater(currentTrade?.tradePrice, {
+                style: "standard",
+              })}
+              {/* {priceFormater(currentCoin?.price || 0, { style: "currency" })} */}
             </Text>
           </View>
           <View style={styles.middle}>
@@ -454,7 +395,8 @@ const StepTwo = ({
                 color: colors.accent,
               }}
             >
-              {currentTrade?.amountCrypto} {currentCoin?.symbol?.toUpperCase()}
+              {Number(currentTrade?.amountCrypto).toFixed(6)}{" "}
+              {currentCoin?.symbol?.toUpperCase()}
             </Text>
           </View>
           <View style={styles.middle}>
@@ -505,7 +447,7 @@ const StepTwo = ({
           },
         ]}
       >
-        {currentTrade?.status == "DISPUTED" ? (
+        {/* {currentTrade?.status == "DISPUTED" ? (
           <View
             style={{
               flexDirection: "row",
@@ -578,6 +520,94 @@ const StepTwo = ({
             ]}
           >
             <Text style={[globalStyles.btnText]}>Open Dispute</Text>
+          </Pressable>
+        )} */}
+
+        {/* Status Banner */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: 10,
+            paddingVertical: 16,
+            paddingStart: 8,
+            paddingEnd: 16,
+          }}
+        >
+          <AntDesign name="exclamation-circle" size={15} color="#FE857D" />
+
+          {/* DISPUTED STATUS */}
+          {currentTrade?.status === "DISPUTED" ? (
+            <Text
+              style={{
+                fontSize: ms(14),
+                color: colors.secondary,
+                lineHeight: 20,
+              }}
+            >
+              Please don’t make another payment unless instructed by support.
+              All updates will be shared here.
+            </Text>
+          ) : (
+            <View style={{ flexDirection: "column", gap: 10 }}>
+              <Text
+                style={{
+                  fontSize: ms(14),
+                  fontWeight: "500",
+                  color: colors.white2,
+                  lineHeight: 20,
+                }}
+              >
+                Haven’t heard from the seller?
+              </Text>
+
+              {!isExpired ? (
+                <Text
+                  style={{
+                    fontSize: ms(14),
+                    fontWeight: "400",
+                    color: colors.secondary,
+                    lineHeight: 20,
+                  }}
+                >
+                  You can open a dispute in{" "}
+                  <Text style={{ color: colors.white2 }}>
+                    {minutes}:{seconds < 10 ? "0" : ""}
+                    {seconds}
+                  </Text>
+                </Text>
+              ) : (
+                <Text
+                  style={{
+                    fontSize: ms(14),
+                    fontWeight: "400",
+                    color: colors.secondary,
+                    lineHeight: 20,
+                  }}
+                >
+                  You can now open a dispute if the seller hasn’t responded.
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Dispute Button */}
+        {currentTrade?.status !== "DISPUTED" && (
+          <Pressable
+            // disabled={!isExpired}
+            onPress={() => setIsOpenDispute(true)}
+            style={[
+              globalStyles.btn,
+              {
+                backgroundColor: isExpired ? "#FE857D" : "#FE857D55",
+                width: "50%",
+              },
+            ]}
+          >
+            <Text style={globalStyles.btnText}>
+              {isExpired ? "Open Dispute" : "Dispute Locked"}
+            </Text>
           </Pressable>
         )}
       </View>
@@ -731,7 +761,7 @@ const StepTwo = ({
       {/* end of read guide */}
 
       {/* submit button */}
-      {currentTrade?.status != "DISPUTED" && (
+      {currentTrade?.status != "DISPUTED" && type == "seller" && (
         <>
           {currentTrade?.status == "CANCELLED" ||
           (currentTrade?.status == "PAID" &&
@@ -739,12 +769,9 @@ const StepTwo = ({
             <Pressable
               onPress={() =>
                 showAlert(
-                  type == "seller"
-                    ? "Confirm payment received?"
-                    : "Made the payment?",
-                  type == "seller"
-                    ? `Have you verified the buyer's payment in your bank account? This action will release ${currentTrade?.amountCrypto} ${currentTrade?.offer?.crypto} from escrow to the buyer.`
-                    : "Ensure you’ve made payment of the exact amount using the provided payment method.",
+                  "Confirm payment received?",
+                  `Have you verified the buyer's payment in your bank account? This action will release ${currentTrade?.amountCrypto} ${currentTrade?.offer?.crypto} from escrow to the buyer.`,
+
                   [
                     {
                       text: "Cancle",
@@ -752,8 +779,8 @@ const StepTwo = ({
                       style: { backgroundColor: "#2D2D2D" },
                     },
                     {
-                      text: type == "seller" ? "Release Crypto" : "Yes, Paid",
-                      onPress: type == "seller" ? handleRelease : handlePaid,
+                      text: "Release Crypto",
+                      onPress: handleRelease,
                       style: { backgroundColor: colors.accent },
                       textStyle: { color: colors.primary },
                     },
@@ -776,10 +803,7 @@ const StepTwo = ({
                 <ActivityIndicator color={colors.primary} />
               ) : (
                 <Text style={globalStyles.btnText}>
-                  {" "}
-                  {type == "seller"
-                    ? "Confirm Payment Recieved"
-                    : "Paid, Notify Seller"}{" "}
+                  Confirm Payment Recieved
                 </Text>
               )}
             </Pressable>

@@ -109,20 +109,37 @@ const StepThree = ({
         </View> */}
       </View>
 
-      <Text
-        style={{
-          fontSize: ms(16),
-          fontWeight: 400,
-          color: colors.secondary,
-          lineHeight: 24,
-          marginTop: 10,
-        }}
-      >
-        {type == "seller"
-          ? `The trade has been completed successfully. You released ${currentTrade?.amountCrypto} ${currentTrade?.offer?.crypto} to @${currentTrade?.buyer?.username}. Funds have been transferred to buyer’s wallet.`
-          : "The trade has been completed successfully. Your purchase is confirmed."}
-      </Text>
+      {currentTrade?.status == "COMPLETED" && (
+        <Text
+          style={{
+            fontSize: ms(16),
+            fontWeight: 400,
+            color: colors.secondary,
+            lineHeight: 24,
+            marginTop: 10,
+          }}
+        >
+          {type == "seller"
+            ? `The trade has been completed successfully. You released ${currentTrade?.amountCrypto} ${currentTrade?.offer?.crypto} to @${currentTrade?.buyer?.username}. Funds have been transferred to buyer’s wallet.`
+            : "The trade has been completed successfully. Your purchase is confirmed."}
+        </Text>
+      )}
 
+      {currentTrade?.status == "CANCELLED" && (
+        <Text
+          style={{
+            fontSize: ms(16),
+            fontWeight: 400,
+            color: colors.secondary,
+            lineHeight: 24,
+            marginTop: 10,
+          }}
+        >
+          {type == "seller"
+            ? `Your trade with @${currentTrade?.buyer?.username} has been Cancelled.`
+            : `Your trade with @${currentTrade?.seller?.username} has been Cancelled.`}
+        </Text>
+      )}
       <Pressable
         onPress={handleGoToChat}
         style={[
@@ -327,8 +344,11 @@ const StepThree = ({
                 color: colors.secondary,
               }}
             >
-              1 {currentTrade?.offer?.crypto} ={" "}
-              {priceFormater(currentCoin?.price || 0, { style: "currency" })}
+              1 {currentTrade?.offer?.crypto} = {currentTrade?.offer?.currency}{" "}
+              {priceFormater(currentTrade?.tradePrice, {
+                style: "standard",
+              })}
+              {/* {priceFormater(currentCoin?.price || 0, { style: "currency" })} */}
             </Text>
           </View>
           <View style={styles.middle}>
@@ -349,7 +369,8 @@ const StepThree = ({
                 color: colors.accent,
               }}
             >
-              {currentTrade?.amountCrypto} {currentCoin?.symbol?.toUpperCase()}
+              {Number(currentTrade?.amountCrypto).toFixed(6)}{" "}
+              {currentCoin?.symbol?.toUpperCase()}
             </Text>
           </View>
           <View style={styles.middle}>
