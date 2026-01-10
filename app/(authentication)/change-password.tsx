@@ -165,7 +165,7 @@ const ChangePasswordScreen = () => {
                 placeholder="Current password"
                 placeholderTextColor="#888"
                 secureTextEntry={!showCurrent}
-                value={currentPassword}
+                // value={currentPassword}
                 onChangeText={setCurrentPassword}
                 style={globalStyles.formInput}
               />
@@ -186,7 +186,7 @@ const ChangePasswordScreen = () => {
                 placeholder="New Password"
                 placeholderTextColor="#888"
                 secureTextEntry={!showNew}
-                value={newPassword}
+                // value={newPassword}
                 onChangeText={setNewPassword}
                 style={globalStyles.formInput}
               />
@@ -225,7 +225,7 @@ const ChangePasswordScreen = () => {
                 placeholder="Confirm New Password"
                 placeholderTextColor="#888"
                 secureTextEntry={!showConfirm}
-                value={confirmPassword}
+                // value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 style={globalStyles.formInput}
               />

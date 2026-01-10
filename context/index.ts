@@ -154,19 +154,38 @@ export const useCoinPriceStore = create<CoinPriceState>((set) => ({
       console.error("Failed to fetch coin prices", error);
     }
   },
-
-  // fetchPrices: async () => {
-  //   try {
-  //     const res = await fetch(
-  //       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd,btc,eth"
-  //     );
-  //     const data = await res.json();
-  //     set({ prices: data });
-  //   } catch (error) {
-  //     console.error("Failed to fetch coin prices", error);
-  //   }
-  // },
 }));
+
+// export const useCoinStore = create<CoinStore>((set) => ({
+//   coins: [],
+//   loading: false,
+//   error: null,
+
+//   fetchCoins: async () => {
+//     set({ loading: true, error: null });
+
+//     try {
+//       const res = await fetch("https://api.coinpaprika.com/v1/tickers");
+//       const data = await res.json();
+
+//       const coins: CoinData[] = Object.entries(COIN_IDS).map(([symbol, id]) => {
+//         const coin = data.find((item: any) => item.id === id);
+//         if (!coin) throw new Error(`Coin ${id} not found`);
+//         return {
+//           symbol: coin.symbol.toLowerCase(),
+//           name: coin.name,
+//           price: coin.quotes.USD.price,
+//           image: `https://static.coinpaprika.com/coin/${coin.id}/logo.png`,
+//         };
+//       });
+
+//       set({ coins, loading: false });
+//     } catch (err: any) {
+//       console.error(err);
+//       set({ error: err.message || "Failed to fetch coins", loading: false });
+//     }
+//   },
+// }));
 
 export const useCoinStore = create<CoinStore>((set) => ({
   coins: [],
@@ -177,24 +196,43 @@ export const useCoinStore = create<CoinStore>((set) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await fetch("https://api.coinpaprika.com/v1/tickers");
+      // Fetch your backend prices
+      const res = await fetch(
+        "https://evolve2p-backend.onrender.com/api/get-prices/USD"
+      );
       const data = await res.json();
 
-      const coins: CoinData[] = Object.entries(COIN_IDS).map(([symbol, id]) => {
-        const coin = data.find((item: any) => item.id === id);
-        if (!coin) throw new Error(`Coin ${id} not found`);
-        return {
-          symbol: coin.symbol.toLowerCase(),
-          name: coin.name,
-          price: coin.quotes.USD.price,
-          image: `https://static.coinpaprika.com/coin/${coin.id}/logo.png`,
-        };
-      });
+      if (!data?.success) {
+        throw new Error("Invalid response from price server");
+      }
+
+      const prices = data.prices;
+
+      // Map using COIN_IDS to keep Paprika image URLs working
+      const coins: CoinData[] = Object.entries(COIN_IDS).map(
+        ([symbol, paprikaId]) => {
+          const symbolUP = symbol.toUpperCase();
+
+          if (!prices[symbolUP]) {
+            throw new Error(`Price not found for ${symbolUP}`);
+          }
+
+          return {
+            symbol: symbol?.toLowerCase(),
+            name: symbol?.toUpperCase(),
+            price: prices[symbolUP].USD,
+            image: `https://static.coinpaprika.com/coin/${paprikaId}/logo.png`,
+          };
+        }
+      );
 
       set({ coins, loading: false });
     } catch (err: any) {
       console.error(err);
-      set({ error: err.message || "Failed to fetch coins", loading: false });
+      set({
+        error: err.message || "Failed to fetch coins",
+        loading: false,
+      });
     }
   },
 }));

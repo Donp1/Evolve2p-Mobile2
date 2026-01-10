@@ -179,11 +179,7 @@ const Home = () => {
           {/* Balance */}
           <BalanceViewer
             lockCurrency={lockCurrency}
-            selectedCurrency={selectedCurrency}
             setLockCurrency={setLockCurrency}
-            setPreferedCoinVisible={setPreferedCoinVisible}
-            preferedCoinVisible={preferedCoinVisible}
-            setSelectedCurrency={setSelectedCurrency}
             refreshing={refreshing}
           />
 

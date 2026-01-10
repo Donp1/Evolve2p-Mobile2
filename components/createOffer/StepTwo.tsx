@@ -153,7 +153,7 @@ const StepTwo: React.FC<StepTwoProps> = ({
                       selectedCurrency?.code?.toUpperCase() ?? ""
                     ] ?? "N/A"
                   ),
-                  { style: "short" }
+                  { style: "standard" }
                 )}
               </Text>
             )
@@ -174,7 +174,7 @@ const StepTwo: React.FC<StepTwoProps> = ({
                     ] ?? "N/A"
                   ) *
                     (1 + margin / 100),
-                  { style: "short" }
+                  { style: "standard" }
                 )}
               </Text>
             )

@@ -268,19 +268,28 @@ const StepThree = ({
                 color: colors.secondary,
               }}
             >
-              {currentTrade?.offer?.type == "SELL" &&
-              currentTrade?.seller?.id == user?.id
-                ? "Buyer"
-                : currentTrade?.offer?.type == "SELL" &&
-                  currentTrade?.seller?.id != user?.id
-                ? "Seller"
-                : currentTrade?.offer?.type == "BUY" &&
-                  currentTrade?.seller?.id == user?.id
-                ? "Seller"
-                : currentTrade?.offer?.type == "BUY" &&
-                  currentTrade?.seller?.id != user?.id
-                ? "Buyer"
-                : ""}
+              {/* {currentTrade?.offer?.type == "SELL" &&
+                       currentTrade?.seller?.id == user?.id
+                         ? "Buyer"
+                         : currentTrade?.offer?.type == "SELL" &&
+                           currentTrade?.seller?.id != user?.id
+                         ? "Seller"
+                         : currentTrade?.offer?.type == "BUY" &&
+                           currentTrade?.seller?.id == user?.id
+                         ? "Seller"
+                         : currentTrade?.offer?.type == "BUY" &&
+                           currentTrade?.seller?.id != user?.id
+                         ? "Buyer"
+                         : ""} */}
+
+              {(() => {
+                const isSeller = currentTrade?.seller?.id === user?.id;
+                const isBuyer = currentTrade?.buyer?.id === user?.id;
+
+                if (isSeller) return "Buyer"; // you are selling → show buyer
+                if (isBuyer) return "Seller"; // you are buying → show seller
+                return ""; // fallback
+              })()}
             </Text>
             <Pressable
               onPress={() => setShowTradeDetails(true)}
@@ -305,19 +314,30 @@ const StepThree = ({
                 }}
               >
                 @
-                {currentTrade?.offer?.type == "SELL" &&
-                currentTrade?.seller?.id == user?.id
-                  ? currentTrade?.buyer?.username
-                  : currentTrade?.offer?.type == "SELL" &&
-                    currentTrade?.seller?.id != user?.id
-                  ? currentTrade?.seller?.username
-                  : currentTrade?.offer?.type == "BUY" &&
-                    currentTrade?.seller?.id == user?.id
-                  ? currentTrade?.seller?.username
-                  : currentTrade?.offer?.type == "BUY" &&
-                    currentTrade?.seller?.id != user?.id
-                  ? currentTrade?.buyer?.username
-                  : ""}
+                {/* {currentTrade?.offer?.type == "SELL" &&
+                         currentTrade?.seller?.id == user?.id
+                           ? currentTrade?.buyer?.username
+                           : currentTrade?.offer?.type == "SELL" &&
+                             currentTrade?.seller?.id != user?.id
+                           ? currentTrade?.seller?.username
+                           : currentTrade?.offer?.type == "BUY" &&
+                             currentTrade?.seller?.id == user?.id
+                           ? currentTrade?.seller?.username
+                           : currentTrade?.offer?.type == "BUY" &&
+                             currentTrade?.seller?.id != user?.id
+                           ? currentTrade?.buyer?.username
+                           : ""} */}
+                {(() => {
+                  if (!currentTrade) return "";
+
+                  const isSeller = currentTrade.seller?.id === user?.id;
+                  const isBuyer = currentTrade.buyer?.id === user?.id;
+
+                  if (isSeller) return currentTrade.buyer?.username || "";
+                  if (isBuyer) return currentTrade.seller?.username || "";
+
+                  return ""; // fallback
+                })()}
               </Text>
               <EvilIcons
                 name="chevron-right"

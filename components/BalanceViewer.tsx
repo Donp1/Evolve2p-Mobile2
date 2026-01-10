@@ -1,12 +1,21 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import React, { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Image } from "expo-image";
 import { colors } from "@/constants";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import TotalBalance from "./Balance";
 import { ms } from "react-native-size-matters";
 import { useUserStore } from "@/store/userStore";
-import PreferedCurrency, { SelectedCurrency } from "@/components/PreferedCurrency";
+import PreferedCurrency, {
+  SelectedCurrency,
+} from "@/components/PreferedCurrency";
+import { useCoins, useCoinStore } from "@/context";
 
 interface Wallet {
   balance: number | string;
@@ -16,23 +25,22 @@ interface Wallet {
 interface PageProps {
   lockCurrency: boolean;
   setLockCurrency: Dispatch<SetStateAction<boolean>>;
-  setPreferedCoinVisible: Dispatch<SetStateAction<boolean>>;
-  setSelectedCurrency: Dispatch<SetStateAction<SelectedCurrency | null | undefined>>;
-  selectedCurrency: SelectedCurrency | null | undefined;
-  preferedCoinVisible: boolean;
   refreshing?: boolean;
 }
 
 const BalanceViewer = ({
+  refreshing,
   lockCurrency,
   setLockCurrency,
-  selectedCurrency,
-  setPreferedCoinVisible,
-  preferedCoinVisible,
-  setSelectedCurrency,
-  refreshing,
 }: PageProps) => {
   const user = useUserStore((state: any) => state.user);
+
+  const [preferedCoinVisible, setPreferedCoinVisible] = useState(false);
+  const setCoin = useCoins((state) => state.setCoin);
+  const { coins, fetchCoins } = useCoinStore();
+  const [selectedCurrency, setSelectedCurrency] = useState<
+    SelectedCurrency | null | undefined
+  >(null);
 
   // Safer derived balances (only recomputes when user or selectedCurrency changes)
   const myBalances = useMemo(() => {

@@ -45,6 +45,7 @@ const Swap = () => {
   }
 
   const coins = useCoinStore((state) => state.coins);
+
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state: any) => state.setUser);
 
@@ -231,7 +232,7 @@ const Swap = () => {
         console.log(error);
       }
     })();
-  }, [topCoin, bottomCoin]);
+  }, [topCoin, bottomCoin, prices]);
 
   const topWallet = user?.wallets.find(
     (wallet: any) =>
@@ -1006,6 +1007,13 @@ const Swap = () => {
               ) : (
                 <Text style={globalStyles.btnText}>Confirm Swap</Text>
               )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => setSwapBottomSheet(false)}
+              style={[globalStyles.btn, { backgroundColor: colors.red }]}
+            >
+              <Text style={globalStyles.btnText}>Close</Text>
             </Pressable>
           </View>
         </ScrollView>

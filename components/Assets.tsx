@@ -8,6 +8,7 @@ import { useUserStore } from "@/store/userStore";
 import { useCoinStore } from "@/context";
 import Spinner from "./Spinner";
 import { colors } from "@/constants";
+import { usePrices } from "@/hooks/usePrices";
 
 interface PageProps {
   lockCurrency: boolean;
@@ -19,25 +20,44 @@ const USDollar = new Intl.NumberFormat("en-US", {
 });
 
 const Assets = ({ lockCurrency }: PageProps) => {
-  const { coins, loading, error } = useCoinStore();
+  // 1️⃣ Coin metadata from Zustand
+  const { coins: metaCoins } = useCoinStore();
+
+  // 2️⃣ Live prices from TanStack Query
+  const { data: livePrices, isLoading, error } = usePrices("USD");
+
   const user = useUserStore((state: any) => state.user);
 
-  // Build wallet lookup map (O(1) lookups instead of .find() in render loop)
+  // 3️⃣ Build wallet lookup map
   const walletMap = useMemo(() => {
     if (!user?.wallets) return {};
     return user.wallets.reduce((map: Record<string, number>, w: any) => {
-      map[String(w?.currency).toUpperCase()] = Number(w?.balance) || 0;
+      map[w.currency?.toUpperCase()] = Number(w.balance) || 0;
       return map;
     }, {});
   }, [user?.wallets]);
 
+  // 4️⃣ Merge coin metadata + live prices
+  const mergedCoins = useMemo(() => {
+    if (!metaCoins || !livePrices) return [];
+
+    return metaCoins.map((coin) => {
+      const symbol = coin.symbol.toUpperCase();
+      return {
+        ...coin,
+        price: livePrices[symbol] ?? 0, // attach live price
+      };
+    });
+  }, [metaCoins, livePrices]);
+
   const renderItem = ({ item: coin }: { item: any }) => {
-    const balance = walletMap[coin.symbol?.toUpperCase()] ?? 0;
-    const usdValue = balance * (Number(coin.price) || 0);
+    const symbol = coin.symbol.toUpperCase();
+
+    const balance = walletMap[symbol] ?? 0;
+    const usdValue = balance * coin.price;
 
     return (
       <View style={styles.coinContainer}>
-        {/* Left Side */}
         <View style={styles.leftContainer}>
           <Image
             source={{ uri: coin.image }}
@@ -48,17 +68,15 @@ const Assets = ({ lockCurrency }: PageProps) => {
           />
           <View>
             <Text style={styles.coinName}>{coin.name}</Text>
-            <Text style={styles.coinPrice}>
-              {USDollar.format(Number(coin.price) || 0)}
-            </Text>
+            <Text style={styles.coinPrice}>{USDollar.format(coin.price)}</Text>
           </View>
         </View>
 
-        {/* Right Side */}
         <View style={styles.rightContainer}>
           <Text style={styles.balanceText}>
             {lockCurrency ? "****" : balance.toFixed(6)}
           </Text>
+
           <Text style={styles.usdValue}>
             {lockCurrency
               ? "****"
@@ -69,7 +87,8 @@ const Assets = ({ lockCurrency }: PageProps) => {
     );
   };
 
-  if (loading) {
+  // Loading
+  if (isLoading) {
     return (
       <View style={styles.spinnerContainer}>
         <Spinner width={40} height={40} />
@@ -77,24 +96,23 @@ const Assets = ({ lockCurrency }: PageProps) => {
     );
   }
 
+  // Error
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load assets</Text>
+        <Text style={styles.errorText}>Failed to load live prices</Text>
       </View>
     );
   }
 
   return (
-    <>
-      <FlatList
-        scrollEnabled={false}
-        data={coins}
-        keyExtractor={(coin) => coin.symbol}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingTop: 10 }}
-      />
-    </>
+    <FlatList
+      scrollEnabled={false}
+      data={mergedCoins}
+      keyExtractor={(coin) => coin.symbol}
+      renderItem={renderItem}
+      contentContainerStyle={{ paddingTop: 10 }}
+    />
   );
 };
 

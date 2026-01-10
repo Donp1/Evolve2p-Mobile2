@@ -22,6 +22,7 @@ import ChatView from "@/components/ChatView";
 import { io } from "socket.io-client";
 import { useUserStore } from "@/store/userStore";
 import DisputeView from "@/components/DisputeView";
+import ChatModal from "@/components/TestChatView";
 
 const socket = io("https://evolve2p-backend.onrender.com");
 
@@ -412,11 +413,14 @@ const ProcessTrade = () => {
         setIsOpen={setIsOpenChat}
       />
 
+      {/* <ChatModal visible={isOpenChat} onClose={() => setIsOpenChat(false)} /> */}
+
       <DisputeView
         currentTrade={currentTrade}
         isOpen={isOpenDispute}
         setIsOpen={setIsOpenDispute}
         setRefreshKey={setRefreshKey}
+        type={type}
       />
     </>
   );

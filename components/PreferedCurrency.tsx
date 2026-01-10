@@ -35,8 +35,9 @@ export default function CurrencySelectorModal({
 }: Props) {
   const [filtered, setFiltered] = useState<Country[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedCurrency, setSelectedCurrency] =
-    useState<SelectedCurrency | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<
+    SelectedCurrency | null | undefined
+  >(null);
 
   const { countries, loading, error } = useCountryStore();
 
@@ -69,7 +70,6 @@ export default function CurrencySelectorModal({
       }
     }
   }, [countries]);
-
   /*  
     🔥 Filter when user types OR modal opens  
   */

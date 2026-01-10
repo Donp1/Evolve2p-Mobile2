@@ -80,9 +80,13 @@ const StepTwo = ({
 
   const { isExpired, minutes, seconds } = useCountdown(
     currentTrade?.paidAt,
-    30
+    10
   );
-
+  const {
+    isExpired: isSupportElapsed,
+    minutes: supportMinutes,
+    seconds: supportSeconds,
+  } = useCountdown(currentTrade?.disputeOpenedAt, 30);
   const { AlertComponent, showAlert } = useAlert();
 
   const handleRelease = async () => {
@@ -294,7 +298,7 @@ const StepTwo = ({
                 color: colors.secondary,
               }}
             >
-              {currentTrade?.offer?.type == "SELL" &&
+              {/* {currentTrade?.offer?.type == "SELL" &&
               currentTrade?.seller?.id == user?.id
                 ? "Buyer"
                 : currentTrade?.offer?.type == "SELL" &&
@@ -306,7 +310,16 @@ const StepTwo = ({
                 : currentTrade?.offer?.type == "BUY" &&
                   currentTrade?.seller?.id != user?.id
                 ? "Buyer"
-                : ""}
+                : ""} */}
+
+              {(() => {
+                const isSeller = currentTrade?.seller?.id === user?.id;
+                const isBuyer = currentTrade?.buyer?.id === user?.id;
+
+                if (isSeller) return "Buyer"; // you are selling → show buyer
+                if (isBuyer) return "Seller"; // you are buying → show seller
+                return ""; // fallback
+              })()}
             </Text>
             <Pressable
               onPress={() => setShowTradeDetails(true)}
@@ -331,7 +344,7 @@ const StepTwo = ({
                 }}
               >
                 @
-                {currentTrade?.offer?.type == "SELL" &&
+                {/* {currentTrade?.offer?.type == "SELL" &&
                 currentTrade?.seller?.id == user?.id
                   ? currentTrade?.buyer?.username
                   : currentTrade?.offer?.type == "SELL" &&
@@ -343,7 +356,18 @@ const StepTwo = ({
                   : currentTrade?.offer?.type == "BUY" &&
                     currentTrade?.seller?.id != user?.id
                   ? currentTrade?.buyer?.username
-                  : ""}
+                  : ""} */}
+                {(() => {
+                  if (!currentTrade) return "";
+
+                  const isSeller = currentTrade.seller?.id === user?.id;
+                  const isBuyer = currentTrade.buyer?.id === user?.id;
+
+                  if (isSeller) return currentTrade.buyer?.username || "";
+                  if (isBuyer) return currentTrade.seller?.username || "";
+
+                  return ""; // fallback
+                })()}
               </Text>
               <EvilIcons
                 name="chevron-right"
@@ -537,17 +561,41 @@ const StepTwo = ({
           <AntDesign name="exclamation-circle" size={15} color="#FE857D" />
 
           {/* DISPUTED STATUS */}
+
           {currentTrade?.status === "DISPUTED" ? (
-            <Text
-              style={{
-                fontSize: ms(14),
-                color: colors.secondary,
-                lineHeight: 20,
-              }}
-            >
-              Please don’t make another payment unless instructed by support.
-              All updates will be shared here.
-            </Text>
+            <View style={{ flexDirection: "column", gap: 10 }}>
+              {/* Message while waiting for support */}
+              {!isSupportElapsed ? (
+                <Text
+                  style={{
+                    fontSize: ms(14),
+                    color: colors.secondary,
+                    lineHeight: 20,
+                  }}
+                >
+                  A dispute is currently open. Customer support will respond in{" "}
+                  <Text style={{ color: colors.white2 }}>
+                    {supportMinutes}:{supportSeconds < 10 ? "0" : ""}
+                    {supportSeconds}
+                  </Text>
+                  . Please don’t make another payment unless instructed by
+                  support. All updates will be shared here.
+                </Text>
+              ) : (
+                // Message after support response time elapsed
+                <Text
+                  style={{
+                    fontSize: ms(14),
+                    color: colors.secondary,
+                    lineHeight: 20,
+                  }}
+                >
+                  The expected response time from customer support has elapsed.
+                  You will receive an update here shortly, or you may follow up
+                  with support if needed.
+                </Text>
+              )}
+            </View>
           ) : (
             <View style={{ flexDirection: "column", gap: 10 }}>
               <Text
@@ -750,7 +798,7 @@ const StepTwo = ({
         <MaterialIcons name="menu-book" size={ms(16)} color={colors.accent} />
         <Text
           style={{
-            fontSize: ms(14),
+            fontSize: ms(14), 
             fontWeight: 700,
             color: colors.accent,
           }}
@@ -761,7 +809,7 @@ const StepTwo = ({
       {/* end of read guide */}
 
       {/* submit button */}
-      {currentTrade?.status != "DISPUTED" && type == "seller" && (
+      {currentTrade?.status == "PAID" && type == "seller" && (
         <>
           {currentTrade?.status == "CANCELLED" ||
           (currentTrade?.status == "PAID" &&

@@ -12,6 +12,7 @@ import {
   Image,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import React, {
   Dispatch,
@@ -35,9 +36,13 @@ import { Entypo, Feather, FontAwesome, Octicons } from "@expo/vector-icons";
 import { useUserStore } from "@/store/userStore";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useAlert } from "./AlertService";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { FlashList, FlashListRef } from "@shopify/flash-list";
 
 interface PageProps {
   isOpen: boolean;
@@ -89,25 +94,55 @@ const ChatView = ({
   const [imagePreviewUri, setImagePreviewUri] = useState<string | null>(null); // fullscreen viewer
 
   const user = useUserStore((state) => state.user);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlashListRef<any>>(null);
   const [isPaying, setIsPaying] = useState(false);
+  const [keyboardShown, setKeyboardShown] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  const insets = useSafeAreaInsets();
   const { AlertComponent, showAlert } = useAlert();
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: false });
   }, []);
 
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", () =>
-      scrollRef.current?.scrollToEnd({ animated: true })
-    );
-    return () => showSub.remove();
-  }, []);
+  // useEffect(() => {
+  //   const showSub = Keyboard.addListener("keyboardDidShow", () =>
+  //     scrollRef.current?.scrollToEnd({ animated: false })
+  //   );
+  //   return () => showSub.remove();
+  // }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardVisible(true);
+      setKeyboardHeight(e.endCoordinates.height);
+      setKeyboardShown(true);
+    });
+    const hide = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+      setKeyboardHeight(0);
+      setKeyboardShown(false);
+    });
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (keyboardShown) {
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: false });
+      }, 50); // small delay ensures keyboard animation has started
+    }
+  }, [keyboardShown]);
 
   // Render an attachment in a message (image centered, click-to-zoom, or file link)
   const renderAttachment = (attachment?: string | null) => {
@@ -143,9 +178,31 @@ const ChatView = ({
     );
   };
 
+  // const handleSendChat = async () => {
+  //   if (isChatSending) return;
+  //   if (!content && !file) return; // prevent empty sends
+
+  //   setIsChatSending(true);
+  //   try {
+  //     const newchat = await sendChat(
+  //       currentTrade?.chat?.id,
+  //       content,
+  //       file || undefined
+  //     );
+  //     setContent("");
+  //     setFile(null);
+  //   } finally {
+  //     setIsChatSending(false);
+  //   }
+  // };
+
   const handleSendChat = async () => {
+    // Prevent double sends
     if (isChatSending) return;
-    if (!content && !file) return; // prevent empty sends
+
+    // Only send if there is content, a file, or both
+    const hasContentOrFile = Boolean(content) || Boolean(file);
+    if (!hasContentOrFile) return;
 
     setIsChatSending(true);
     try {
@@ -154,6 +211,8 @@ const ChatView = ({
         content,
         file || undefined
       );
+
+      // Clear input and file after sending
       setContent("");
       setFile(null);
     } finally {
@@ -176,6 +235,11 @@ const ChatView = ({
 
   // Pick image or PDF
   const pickFile = async () => {
+    setKeyboardVisible(false);
+    setKeyboardHeight(0);
+    setKeyboardShown(false);
+    Keyboard.dismiss();
+
     const hasPermission = await requestPermission();
     if (!hasPermission) return;
 
@@ -187,8 +251,11 @@ const ChatView = ({
 
     if (!result.canceled) {
       const asset = result.assets[0]; // { uri, name, size, mimeType }
-      scrollRef.current?.scrollToEnd({ animated: false });
       setFile(asset);
+      await handleSendChat();
+      // 👇 Reset keyboard height manually
+
+      scrollRef.current?.scrollToEnd({ animated: false });
     }
   };
 
@@ -300,166 +367,375 @@ const ChatView = ({
 
   return (
     <Modal animationType="slide" transparent visible={isOpen}>
-      <SafeAreaView style={globalStyles.container}>
-        {AlertComponent}
-        <KeyboardAvoidingView style={styles.container}>
-          {/* Top bar */}
-          <View style={styles.top}>
-            <Pressable onPress={() => setIsOpen(false)} style={{ padding: 10 }}>
-              <Feather name="chevron-left" size={24} color={colors.secondary} />
-            </Pressable>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              <View style={styles.icon}>
+      <View style={{ flex: 1 }}>
+        <SafeAreaView style={globalStyles.container}>
+          {AlertComponent}
+          <View style={styles.container}>
+            {/* Top bar */}
+            <View style={styles.top}>
+              <Pressable
+                onPress={() => setIsOpen(false)}
+                style={{ padding: 10 }}
+              >
+                <Feather
+                  name="chevron-left"
+                  size={24}
+                  color={colors.secondary}
+                />
+              </Pressable>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <View style={styles.icon}>
+                  <Text
+                    style={{
+                      fontSize: ms(14),
+                      fontWeight: "500",
+                      color: colors.gray4,
+                    }}
+                  >
+                    {type == "seller"
+                      ? getInitials(currentTrade?.buyer?.username)
+                      : getInitials(currentTrade?.seller?.username)}
+                  </Text>
+                </View>
                 <Text
                   style={{
-                    fontSize: ms(14),
-                    fontWeight: "500",
-                    color: colors.gray4,
+                    fontWeight: "600",
+                    fontSize: ms(16),
+                    color: colors.white2,
                   }}
                 >
                   {type == "seller"
-                    ? getInitials(currentTrade?.buyer?.username)
-                    : getInitials(currentTrade?.seller?.username)}
+                    ? currentTrade?.buyer?.username
+                    : currentTrade?.seller?.username}
                 </Text>
+                <Octicons name="check-circle-fill" size={13} color="#4DF2BE" />
               </View>
-              <Text
-                style={{
-                  fontWeight: "600",
-                  fontSize: ms(16),
-                  color: colors.white2,
-                }}
-              >
-                {type == "seller"
-                  ? currentTrade?.buyer?.username
-                  : currentTrade?.seller?.username}
-              </Text>
-              <Octicons name="check-circle-fill" size={13} color="#4DF2BE" />
             </View>
-          </View>
 
-          {/* Chat body */}
-          <View style={styles.body}>
-            <View style={styles.priceContainer}>
-              <View>
-                <Text style={{ fontSize: ms(12), color: colors.secondary }}>
-                  FIAT AMOUNT
-                </Text>
-                <Text
-                  style={{
-                    fontSize: ms(16),
-                    color: colors.white2,
-                    fontWeight: "500",
-                  }}
-                >
-                  {priceFormater(currentTrade?.amountFiat)}{" "}
-                  {currentTrade?.offer?.currency}
-                </Text>
-              </View>
-
-              {currentTrade?.status == "PENDING" ? (
-                <Pressable
-                  onPress={
-                    currentTrade?.seller?.id == user.id
-                      ? handleRelease
-                      : currentTrade?.buyer?.id == user.id
-                      ? handlePaid
-                      : null
-                  }
-                  disabled={
-                    currentTrade?.status == "PAID" ||
-                    currentTrade?.status == "CANCELLED" ||
-                    currentTrade?.status == "COMPLETED" ||
-                    currentTrade?.status == "DISPUTED"
-                  }
-                  style={[
-                    globalStyles.btn,
-                    { width: "auto", paddingHorizontal: 10 },
-                  ]}
-                >
-                  {isPaying ? (
-                    <Spinner width={20} height={20} />
-                  ) : (
-                    <Text style={[globalStyles.btnText]}>
-                      {currentTrade?.seller?.id == user.id && "Release Funds"}
-                      {currentTrade?.buyer?.id == user.id && "Mark as Paid"}
-                    </Text>
-                  )}
-                </Pressable>
-              ) : (
-                <Pressable
-                  disabled={
-                    currentTrade?.status == "PAID" ||
-                    currentTrade?.status == "CANCELLED" ||
-                    currentTrade?.status == "COMPLETED" ||
-                    currentTrade?.status == "DISPUTED"
-                  }
-                  style={[
-                    globalStyles.btn,
-                    { width: "auto", paddingHorizontal: 10 },
-                    currentTrade?.status == "PAID" && {
-                      backgroundColor: "#3A3A3A",
-                    },
-                    currentTrade?.status == "CANCELLED" && {
-                      backgroundColor: "#3A3A3A",
-                    },
-
-                    currentTrade?.status == "COMPLETED" && {
-                      backgroundColor: "#3A3A3A",
-                    },
-                    currentTrade?.status == "DISPUTED" && {
-                      backgroundColor: "#3A3A3A",
-                    },
-                  ]}
-                >
+            {/* Chat body */}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={
+                keyboardVisible
+                  ? keyboardHeight / vs(8) // 👈 this scales correctly for all screens
+                  : 0
+              }
+              style={styles.body}
+            >
+              <View style={styles.priceContainer}>
+                <View>
+                  <Text style={{ fontSize: ms(12), color: colors.secondary }}>
+                    FIAT AMOUNT
+                  </Text>
                   <Text
+                    style={{
+                      fontSize: ms(16),
+                      color: colors.white2,
+                      fontWeight: "500",
+                    }}
+                  >
+                    {priceFormater(currentTrade?.amountFiat)}{" "}
+                    {currentTrade?.offer?.currency}
+                  </Text>
+                </View>
+
+                {currentTrade?.status == "PENDING" ? (
+                  <Pressable
+                    onPress={
+                      currentTrade?.seller?.id == user.id
+                        ? handleRelease
+                        : currentTrade?.buyer?.id == user.id
+                        ? handlePaid
+                        : null
+                    }
+                    disabled={
+                      currentTrade?.status == "PAID" ||
+                      currentTrade?.status == "CANCELLED" ||
+                      currentTrade?.status == "COMPLETED" ||
+                      currentTrade?.status == "DISPUTED"
+                    }
                     style={[
-                      globalStyles.btnText,
+                      globalStyles.btn,
+                      { width: "auto", paddingHorizontal: 10 },
+                    ]}
+                  >
+                    {isPaying ? (
+                      <Spinner width={20} height={20} />
+                    ) : (
+                      <Text style={[globalStyles.btnText]}>
+                        {currentTrade?.seller?.id == user.id && "Release Funds"}
+                        {currentTrade?.buyer?.id == user.id && "Mark as Paid"}
+                      </Text>
+                    )}
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    disabled={
+                      currentTrade?.status == "PAID" ||
+                      currentTrade?.status == "CANCELLED" ||
+                      currentTrade?.status == "COMPLETED" ||
+                      currentTrade?.status == "DISPUTED"
+                    }
+                    style={[
+                      globalStyles.btn,
+                      { width: "auto", paddingHorizontal: 10 },
                       currentTrade?.status == "PAID" && {
-                        color: colors.white,
+                        backgroundColor: "#3A3A3A",
                       },
                       currentTrade?.status == "CANCELLED" && {
-                        color: colors.white,
-                      },
-                      currentTrade?.status == "DISPUTED" && {
-                        color: colors.white,
+                        backgroundColor: "#3A3A3A",
                       },
 
                       currentTrade?.status == "COMPLETED" && {
-                        color: colors.accent,
+                        backgroundColor: "#3A3A3A",
+                      },
+                      currentTrade?.status == "DISPUTED" && {
+                        backgroundColor: "#3A3A3A",
                       },
                     ]}
                   >
-                    {currentTrade?.status}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
+                    <Text
+                      style={[
+                        globalStyles.btnText,
+                        currentTrade?.status == "PAID" && {
+                          color: colors.white,
+                        },
+                        currentTrade?.status == "CANCELLED" && {
+                          color: colors.white,
+                        },
+                        currentTrade?.status == "DISPUTED" && {
+                          color: colors.white,
+                        },
 
-            {/* <KeyboardAwareScrollView
-              contentContainerStyle={{ flexGrow: 1 }}
-              enableOnAndroid
-              extraScrollHeight={20} // pushes content above keyboard
-            ></KeyboardAwareScrollView> */}
+                        currentTrade?.status == "COMPLETED" && {
+                          color: colors.accent,
+                        },
+                      ]}
+                    >
+                      {currentTrade?.status}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
 
-            <ScrollView
-              ref={scrollRef}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 110 }}
-            >
-              {messages
-                ?.sort(
-                  (a: any, b: any) =>
-                    new Date(a.createdAt).getTime() -
-                    new Date(b.createdAt).getTime()
-                )
-                .map((message: any) => {
-                  // System message
-                  if (message.type === "SYSTEM" && !message.senderId) {
+              {/* <ScrollView
+                ref={scrollRef}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingBottom: 50,
+                  flexGrow: 1,
+                  paddingHorizontal: 10,
+                }}
+              >
+                {messages
+                  ?.sort(
+                    (a: any, b: any) =>
+                      new Date(a.createdAt).getTime() -
+                      new Date(b.createdAt).getTime()
+                  )
+                  .map((message: any) => {
+                    // System message
+                    if (message.type === "SYSTEM" && !message.senderId) {
+                      return (
+                        <View
+                          key={message.id}
+                          style={{ marginVertical: 10, alignItems: "center" }}
+                        >
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              justifyContent: "space-between",
+                              width: "100%",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: colors.accent,
+                                fontWeight: "500",
+                              }}
+                            >
+                              Service message
+                            </Text>
+                            <Text
+                              style={{
+                                color: colors.gray4,
+                                fontSize: ms(12),
+                              }}
+                            >
+                              {formatDateTime(message?.createdAt)}
+                            </Text>
+                          </View>
+                          <View style={styles.serviceMessageContainer}>
+                            <Text style={styles.serviceMessageText}>
+                              {message.content}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    }
+
+                    // Support Messages
+                    if (message.type === "SUPPORT" && !message.senderId) {
+                      return (
+                        <View
+                          key={message.id}
+                          style={{ marginVertical: 10, alignItems: "center" }}
+                        >
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              justifyContent: "space-between",
+                              width: "100%",
+                            }}
+                          >
+                            <Text
+                              style={{ color: "#D1D5DB", fontWeight: "500" }}
+                            >
+                              Customer Support
+                            </Text>
+                            <Text
+                              style={{
+                                color: colors.gray4,
+                                fontSize: ms(12),
+                              }}
+                            >
+                              {formatDateTime(message?.createdAt)}
+                            </Text>
+                          </View>
+                          <View
+                            style={[
+                              styles.serviceMessageContainer,
+                              { borderColor: "#F3F4F6" },
+                            ]}
+                          >
+                            <Text style={styles.serviceMessageText}>
+                              {message.content}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    }
+
+                    // User message
+                    if (message?.senderId === user?.id) {
+                      return (
+                        <View
+                          key={message.id}
+                          style={styles.userMessageContainer}
+                        >
+                          <Text
+                            style={{
+                              color: colors.gray4,
+                              fontSize: ms(12),
+                              textAlign: "right",
+                              marginBottom: 4,
+                            }}
+                          >
+                            {formatDateTime(message?.createdAt)}
+                          </Text>
+                          <View style={styles.userBubble}>
+                            {message.content ? (
+                              <Text style={styles.userMessageText}>
+                                {message.content}
+                              </Text>
+                            ) : null}
+                            {renderAttachment(message.attachment)}
+                          </View>
+                        </View>
+                      );
+                    }
+
+                    // Other user message
                     return (
                       <View
                         key={message.id}
+                        style={styles.creatorMessageContainer}
+                      >
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            marginBottom: 4,
+                            alignItems: "center",
+                          }}
+                        >
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 10,
+                            }}
+                          >
+                            <View style={styles.icon}>
+                              <Text style={{ color: colors.gray4 }}>
+                                {type == "seller"
+                                  ? getInitials(currentTrade?.buyer?.username)
+                                  : getInitials(currentTrade?.seller?.username)}
+                              </Text>
+                            </View>
+                            <Text
+                              style={{
+                                color: colors.white2,
+                                fontWeight: "600",
+                              }}
+                            >
+                              {type == "seller"
+                                ? currentTrade?.buyer?.username
+                                : currentTrade?.seller?.username}
+                            </Text>
+                          </View>
+                          <Text
+                            style={{ color: colors.gray4, fontSize: ms(12) }}
+                          >
+                            {formatDateTime(message?.createdAt)}
+                          </Text>
+                        </View>
+                        <View style={styles.creatorBubble}>
+                          {message.content ? (
+                            <Text style={styles.creatorMessageText}>
+                              {message.content}
+                            </Text>
+                          ) : null}
+                          {renderAttachment(message.attachment)}
+                        </View>
+                      </View>
+                    );
+                  })}
+
+                {/* Pending file preview (before sending) */}
+              {/* {renderPendingPreview()} */}
+              {/* </ScrollView>  */}
+
+              <FlashList
+                ref={scrollRef}
+                keyboardShouldPersistTaps="handled"
+                data={
+                  messages?.sort(
+                    (a: any, b: any) =>
+                      new Date(a.createdAt).getTime() -
+                      new Date(b.createdAt).getTime()
+                  ) ?? []
+                }
+                // estimatedItemSize={120} // 👈 important for speed
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingBottom: 50,
+                  paddingHorizontal: 10,
+                }}
+                onContentSizeChange={() => {
+                  scrollRef.current?.scrollToEnd({ animated: false });
+                }}
+                renderItem={({ item: message }) => {
+                  // SYSTEM MESSAGE
+                  if (message.type === "SYSTEM" && !message.senderId) {
+                    return (
+                      <View
                         style={{ marginVertical: 10, alignItems: "center" }}
                       >
                         <View
@@ -480,6 +756,7 @@ const ChatView = ({
                             {formatDateTime(message?.createdAt)}
                           </Text>
                         </View>
+
                         <View style={styles.serviceMessageContainer}>
                           <Text style={styles.serviceMessageText}>
                             {message.content}
@@ -489,11 +766,10 @@ const ChatView = ({
                     );
                   }
 
-                  // Support Messages
+                  // SUPPORT MESSAGE
                   if (message.type === "SUPPORT" && !message.senderId) {
                     return (
                       <View
-                        key={message.id}
                         style={{ marginVertical: 10, alignItems: "center" }}
                       >
                         <View
@@ -512,6 +788,7 @@ const ChatView = ({
                             {formatDateTime(message?.createdAt)}
                           </Text>
                         </View>
+
                         <View
                           style={[
                             styles.serviceMessageContainer,
@@ -526,13 +803,10 @@ const ChatView = ({
                     );
                   }
 
-                  // User message
+                  // USER MESSAGE
                   if (message?.senderId === user?.id) {
                     return (
-                      <View
-                        key={message.id}
-                        style={styles.userMessageContainer}
-                      >
+                      <View style={styles.userMessageContainer}>
                         <Text
                           style={{
                             color: colors.gray4,
@@ -543,6 +817,7 @@ const ChatView = ({
                         >
                           {formatDateTime(message?.createdAt)}
                         </Text>
+
                         <View style={styles.userBubble}>
                           {message.content ? (
                             <Text style={styles.userMessageText}>
@@ -555,12 +830,9 @@ const ChatView = ({
                     );
                   }
 
-                  // Other user message
+                  // OTHER USER MESSAGE
                   return (
-                    <View
-                      key={message.id}
-                      style={styles.creatorMessageContainer}
-                    >
+                    <View style={styles.creatorMessageContainer}>
                       <View
                         style={{
                           flexDirection: "row",
@@ -583,6 +855,7 @@ const ChatView = ({
                                 : getInitials(currentTrade?.seller?.username)}
                             </Text>
                           </View>
+
                           <Text
                             style={{ color: colors.white2, fontWeight: "600" }}
                           >
@@ -591,10 +864,12 @@ const ChatView = ({
                               : currentTrade?.seller?.username}
                           </Text>
                         </View>
+
                         <Text style={{ color: colors.gray4, fontSize: ms(12) }}>
                           {formatDateTime(message?.createdAt)}
                         </Text>
                       </View>
+
                       <View style={styles.creatorBubble}>
                         {message.content ? (
                           <Text style={styles.creatorMessageText}>
@@ -605,59 +880,66 @@ const ChatView = ({
                       </View>
                     </View>
                   );
-                })}
-
-              {/* Pending file preview (before sending) */}
-              {renderPendingPreview()}
-            </ScrollView>
-          </View>
-
-          {/* Input */}
-          <View style={styles.chatMessageCointainer}>
-            <View style={styles.chatBox}>
-              <TextInput
-                placeholder="Type a message… "
-                placeholderTextColor={colors.gray4}
-                multiline
-                style={styles.message}
-                value={content}
-                onChangeText={setContent}
+                }}
+                ListFooterComponent={renderPendingPreview()} // 👈 your pending upload preview
               />
-              <Pressable onPress={pickFile}>
-                <Entypo name="attachment" size={ms(18)} color={colors.white2} />
-              </Pressable>
-            </View>
-            <Pressable
-              disabled={isChatSending}
-              onPress={handleSendChat}
-              style={[styles.btn, { opacity: isChatSending ? 0.5 : 1 }]}
-            >
-              {isChatSending ? (
-                <Spinner width={20} height={20} />
-              ) : (
-                <FontAwesome name="send" size={ms(20)} color="#0F1012" />
-              )}
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
 
-        {/* Fullscreen image preview (tap to close) */}
-        <Modal visible={!!imagePreviewUri} transparent animationType="fade">
-          <TouchableOpacity
-            activeOpacity={1}
-            style={styles.viewerBackdrop}
-            onPress={() => setImagePreviewUri(null)}
-          >
-            {imagePreviewUri && (
-              <Image
-                source={{ uri: imagePreviewUri }}
-                style={styles.viewerImage}
-                resizeMode="contain"
-              />
-            )}
-          </TouchableOpacity>
-        </Modal>
-      </SafeAreaView>
+              {/* Input */}
+              <View style={styles.chatMessageCointainer}>
+                <View style={styles.chatBox}>
+                  <TextInput
+                    placeholder="Type a message… "
+                    placeholderTextColor={colors.gray4}
+                    multiline
+                    style={styles.message}
+                    value={content}
+                    onChangeText={setContent}
+                  />
+                  <Pressable onPress={pickFile}>
+                    <Entypo
+                      name="attachment"
+                      size={ms(18)}
+                      color={colors.white2}
+                    />
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  disabled={isChatSending || (!content && !file)} // 👈 either content OR file
+                  onPress={handleSendChat}
+                  style={[
+                    styles.btn,
+                    { opacity: isChatSending || (!content && !file) ? 0.5 : 1 },
+                  ]}
+                >
+                  {isChatSending ? (
+                    <Spinner width={20} height={20} />
+                  ) : (
+                    <FontAwesome name="send" size={ms(20)} color="#0F1012" />
+                  )}
+                </Pressable>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </SafeAreaView>
+      </View>
+
+      {/* Fullscreen image preview (tap to close) */}
+      <Modal visible={!!imagePreviewUri} transparent animationType="fade">
+        <TouchableOpacity
+          activeOpacity={1}
+          style={styles.viewerBackdrop}
+          onPress={() => setImagePreviewUri(null)}
+        >
+          {imagePreviewUri && (
+            <Image
+              source={{ uri: imagePreviewUri }}
+              style={styles.viewerImage}
+              resizeMode="contain"
+            />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </Modal>
   );
 };
@@ -687,13 +969,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray,
   },
   body: {
     flex: 1,
-    paddingHorizontal: ms(15),
   },
   chatMessageCointainer: {
     backgroundColor: "#0F1012",
@@ -702,8 +983,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     paddingHorizontal: 10,
-    position: "absolute",
-    bottom: 0,
+    // position: "absolute",
+    // bottom: 0,
     width: "100%",
     alignItems: "center",
   },

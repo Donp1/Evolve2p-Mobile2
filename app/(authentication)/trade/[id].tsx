@@ -620,11 +620,11 @@ const Trade = () => {
                   >
                     {currencyDetails?.symbol}
                     {priceFormater(currentOffer?.minLimit || 0, {
-                      style: "short",
+                      style: "standard",
                     })}{" "}
                     - {currencyDetails?.symbol}
                     {priceFormater(currentOffer?.maxLimit || 0, {
-                      style: "short",
+                      style: "standard",
                     })}
                   </Text>
                 </View>

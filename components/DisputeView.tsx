@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { globalStyles } from "@/utils/globalStyles";
 import { colors } from "@/constants";
@@ -28,34 +28,17 @@ interface DisputeViewProps {
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   currentTrade: any;
   setRefreshKey: Dispatch<SetStateAction<number>>;
+  type?: string;
 }
-
-// Permission (iOS requires for photo library)
-// const requestPermission = async () => {
-//   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//   if (status !== "granted") {
-//     Alert.alert(
-//       "Permission required",
-//       "We need access to your photos/files to upload."
-//     );
-//     return false;
-//   }
-//   return true;
-// };
 
 const DisputeView = ({
   isOpen,
   setIsOpen,
   currentTrade,
   setRefreshKey,
+  type,
 }: DisputeViewProps) => {
-  const [reasons, setReasons] = React.useState([
-    "Payment not received",
-    "Paid wrong amount",
-    "Received wrong payment details",
-    "Transaction Limit",
-    "Other (please specify)",
-  ]);
+  const [reasons, setReasons] = React.useState<string[]>([]);
   const [openReason, setOpenReason] = React.useState(false);
   const [selectedReason, setSelectedReason] = React.useState(reasons[0]);
 
@@ -66,10 +49,37 @@ const DisputeView = ({
   const [isDisputing, setIsDisputing] = useState(false);
   const { AlertComponent, showAlert } = useAlert();
 
+  useEffect(() => {
+    setReasons(
+      type == "seller"
+        ? [
+            "Payment not received",
+            "Paid wrong amount",
+            "Received wrong payment details",
+            "Transaction Limit",
+            "Other (please specify)",
+          ]
+        : [
+            "I paid, but the seller hasn’t released the funds",
+            "Seller is not releasing payment despite the completed transfer.",
+            "Payment done, waiting for seller to release funds.",
+            "Seller ignoring me and not releasing funds.",
+            "I’ve completed payment; seller hasn’t released crypto.",
+            "Other (please specify)",
+          ]
+    );
+
+    setSelectedReason(
+      type == "seller"
+        ? "Payment not received"
+        : "I paid, but the seller hasn’t released the funds"
+    );
+  }, [currentTrade, type]);
+
   // Pick file (image or PDF)
   const pickFile = async () => {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ["image/*", "application/pdf"],
+      type: ["image/*"],
       copyToCacheDirectory: true,
       multiple: false,
     });
@@ -140,6 +150,7 @@ const DisputeView = ({
       setDescription("");
     }
   };
+
   return (
     <>
       <Modal animationType="slide" transparent visible={isOpen}>

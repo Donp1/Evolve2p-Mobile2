@@ -74,15 +74,11 @@ export function formatAddress(address: string, chars = 4): string {
 
 const Wallet = () => {
   const [coinLoading, setCoinLoading] = React.useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<
-    SelectedCurrency | null | undefined
-  >(null);
   const [lockCurrency, setLockCurrency] = useState(false);
   const [myBalances, setMyBalances] = useState<
     { crypto: string; amount: number }[]
   >([]);
 
-  const [preferedCoinVisible, setPreferedCoinVisible] = useState(false);
   const [completeKycVisible, setCompleteKycVisible] = useState(false);
 
   const [cryptoAction, setCryptoAction] = useState("");
@@ -90,8 +86,6 @@ const Wallet = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const [actions, setActions] = useState<any[]>([]);
-
-  const setCoin = useCoins((state) => state.setCoin);
 
   const user = useUserStore((state: any) => state.user);
   const { coins, fetchCoins, loading, error } = useCoinStore();
@@ -304,11 +298,7 @@ const Wallet = () => {
 
           <BalanceViewer
             lockCurrency={lockCurrency}
-            selectedCurrency={selectedCurrency}
             setLockCurrency={setLockCurrency}
-            setPreferedCoinVisible={setPreferedCoinVisible}
-            preferedCoinVisible={preferedCoinVisible}
-            setSelectedCurrency={setSelectedCurrency}
             refreshing={refreshing}
           />
 
